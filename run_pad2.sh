@@ -8,8 +8,11 @@
 #     10 states x 5 resamples/arm gives SE ~0.10 on the mean paired difference at
 #     p ~ 0.5, i.e. ~80% power for a 27pp shift. Smaller shifts are not detectable
 #     at this budget and no claim will be made about them.
-#   * max_steps = step + 40, because the honest path takes 30-70 turns and
-#     step + 14 truncated 39 of 80 continuations in v1
+#   * max_steps = step + 25. v1 used step + 14 and truncated 39 of 80
+#     continuations. +40 was the first correction, but in the 51-error pool the
+#     first workaround artifact appears at steps 4, 13 and 16 — the extra 15
+#     steps only buy rollouts that were never going to produce one, at ~40% of
+#     the wall-clock. Truncation rate per arm is reported by analyze_pad2.py.
 #   * three arms: control, pad_inert, pad_work — filler generated per state from
 #     that state's own workspace, matched on tokens AND turn count
 #
@@ -34,7 +37,7 @@ docker tag precommit_hook:local precommit_hook:latest 2>/dev/null
 mkdir -p "$SCREEN_OUT" "$RUN_OUT" "$FILLERS"
 
 tag_of() { echo "$1" | sed 's#.*120b/##; s#/#_#g'; }
-cap_of() { echo $(( $(basename "$1" | sed 's/step-//') + 40 )); }
+cap_of() { echo $(( $(basename "$1" | sed 's/step-//') + 25 )); }
 
 resume() {  # <step-dir> <count> <results-dir>
   ( cd "$REPO" && uv run --quiet python scripts/resume.py "$1" \
