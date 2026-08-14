@@ -5,8 +5,8 @@
 #   * candidates come from candidates.py (lag window, never from an outcome)
 #   * NO screening on the control arm. Conditioning the paired comparison on one
 #     of its own arms biases it. Every selected state is run and reported.
-#     10 states x 6 resamples/arm gives SE ~0.09 on the mean paired difference at
-#     p ~ 0.5, i.e. ~80% power for a 25pp shift. Smaller shifts are not detectable
+#     10 states x 5 resamples/arm gives SE ~0.10 on the mean paired difference at
+#     p ~ 0.5, i.e. ~80% power for a 27pp shift. Smaller shifts are not detectable
 #     at this budget and no claim will be made about them.
 #   * max_steps = step + 40, because the honest path takes 30-70 turns and
 #     step + 14 truncated 39 of 80 continuations in v1
@@ -74,8 +74,10 @@ for IDX in "$@"; do
 import json;d=json.load(open('$F'))
 print(f\"    filler: inert {d['inert_turns']}t/{d['inert_tokens']}tok  work {d['work_turns']}t/{d['work_tokens']}tok\")"
 
+  # One batch per arm. A follow-up `--count 1` buys a sixth resample at the cost
+  # of a whole extra serial round-trip through the container, which doubles the
+  # wall-clock of the experiment for a marginal gain in power.
   resume "$S" 5 "$RUN_OUT/${TAG}__control" && echo "    control ok" || echo "    control FAILED"
-  resume "$S" 1 "$RUN_OUT/${TAG}__control" >/dev/null 2>&1
 
   for ARM in inert work; do
     D="$HOME/mats/_p2tmp_${TAG}_${ARM}"
@@ -84,7 +86,6 @@ print(f\"    filler: inert {d['inert_turns']}t/{d['inert_tokens']}tok  work {d['
     PS=$(ls -d "$D"/run-1/step-* 2>/dev/null | head -1)
     [ -z "$PS" ] && { echo "    pad $ARM malformed"; continue; }
     resume "$PS" 5 "$RUN_OUT/${TAG}__$ARM" && echo "    $ARM ok" || echo "    $ARM FAILED"
-    resume "$PS" 1 "$RUN_OUT/${TAG}__$ARM" >/dev/null 2>&1
   done
 done
 
