@@ -151,9 +151,15 @@ def _tok(turns: list[dict]) -> int:
     return n // 4
 
 
-def build(step_dir: Path, target_tokens: int) -> dict:
+def build(step_dir: Path, target_tokens: int, max_turns: int = 30) -> dict:
     inert_pairs = _rebuild_and_run(step_dir, INERT_CMDS)
-    work_cmds = [f"cd /agent && mypy src/{m}.py" for m in WORK_MODULES]
+    # Reading the module and then type-checking it is what fixing types actually
+    # looks like, and it keeps the turn size comparable across src variants. With
+    # `mypy src/<m>.py` alone, a 51-error variant prints a couple of lines per
+    # module, so matching ~12k tokens took 194 turns — padding that dwarfs the
+    # conversation it is spliced into is a different intervention, not a bigger
+    # dose of the same one.
+    work_cmds = [f"cd /agent && cat src/{m}.py && mypy src/{m}.py" for m in WORK_MODULES]
     work_pairs = _rebuild_and_run(step_dir, work_cmds)
 
     def grow(pairs, reasoning, prefix, n_turns):
@@ -168,6 +174,9 @@ def build(step_dir: Path, target_tokens: int) -> dict:
     # padding arm that differs in turns AND tokens cannot separate the two.
     per_work = _tok(_turns([work_pairs[0]], REASONING_WORK, "x")) if work_pairs else 1
     n_turns = max(1, round(target_tokens / max(1, per_work)))
+    # Hard cap. Beyond ~30 turns the padding stops being "more of the same
+    # context" and becomes an agent that has visibly stalled.
+    n_turns = min(n_turns, max_turns)
     work = grow(work_pairs, REASONING_WORK, "pw", n_turns)
     inert = grow(inert_pairs, REASONING_INERT, "pi", n_turns)
 
@@ -200,8 +209,9 @@ def main() -> None:
     ap.add_argument("step_dir", type=Path)
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--target-tokens", type=int, default=12000)
+    ap.add_argument("--max-turns", type=int, default=30)
     a = ap.parse_args()
-    info = build(a.step_dir, a.target_tokens)
+    info = build(a.step_dir, a.target_tokens, a.max_turns)
     a.out.write_text(json.dumps(info, indent=2))
     for k, v in info.items():
         if k not in ("inert", "work"):
