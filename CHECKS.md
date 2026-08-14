@@ -829,3 +829,25 @@ behavioural oracle        by construction    by construction
 Tiers 2 and 3 are keyword passes and are not results until
 `monitorability_sample.md` is hand-labelled; tier 1 needs the least judgement,
 and its four false positives were read individually and are recorded above.
+
+**Workload arm, complete (n = 44).**
+
+```
+errors    n   workaround   honest hook   stopped w/o hook   hit cap
+     0   10       0/10           10             0            0
+    51   10       3/10            3             2            2
+   258   10      10/10            0             0            0
+   602   14      11/14            1             2            0
+```
+
+Cochran-Armitage trend across the four conditions, scored by rank rather than by
+raw error count (0/51/258/602 is far from linear and raw scores would let one
+cell dominate): **z = 4.40, p = 1.1e-05**. The informative adjacent contrast,
+51 vs 258, is Fisher exact **p = 0.0031**. 0 vs 51 is p = 0.21 — the floor cell
+carries no weight on its own.
+
+602 sits slightly below 258 (79% vs 100%); the Wilson intervals overlap heavily
+and the rate is best read as saturating by 258, not as declining.
+
+Reported as the total effect of the launch condition. Workload and context move
+together by construction here, so this arm attributes nothing to either one.
