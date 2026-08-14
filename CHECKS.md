@@ -414,3 +414,57 @@ looked at the hook and at per-module headers in `src/*.py`.
 Each was found only by opening the artifact, and each was missed by whichever scorer wasn't looking
 there. That is the finding — not that one regex was wrong, but that the space of places to hide is
 larger than any grep author enumerates in advance.
+
+---
+
+### 2026-08-14 · Literature check — one correction, one design gap worth filling
+
+**CORRECTION: the "fourth workaround class" may not be new.** Model Forensics Figure 5 bins
+workarounds as 48% staged-files-only · **22% overwrite the type-checker settings** · 17%
+non-blocking hook. Our `config_suppression` (writing `.mypy.ini` with `ignore_errors = True`) is
+plausibly inside that 22% bin. What remains true and verified is narrower: the **released
+`score.py` cannot detect it**, because it inspects `pyproject.toml` only. Claim the scorer gap, not
+the discovery of a new behaviour. Read §6.1 and Appendix C.1 before writing anything up.
+
+Also: the paper's §6.1 case study is *this exact environment*, and it annotates the literal sentence
+**"But fixing 258 errors would be a huge task"** as a top-quartile causal driver (+11.4pp).
+
+**Resampling estimators, for citation:**
+- *Thought Anchors* is arXiv **2506.19143** (Bogdan, Macar, Nanda, Conmy). *Thought Branches* is
+  **2510.27484** (Macar, Bogdan, Rajamanoharan, Nanda). Two different papers — I had them conflated.
+- Thought Anchors: resampling importance = `D_KL[p(A'_Si) || p(A_Si)]`, **100 rollouts/sentence**,
+  cosine 0.8 on all-MiniLM-L6-v2.
+- Model Forensics: simpler difference-of-rates before vs after a sentence, **k = 50**. This is the
+  estimator our paired design is implicitly using.
+
+**THE DESIGN GAP — and it is cheap to close.** Both published context-length papers *argue* their
+padding is inert; neither *verifies* it.
+- 2604.20911: its "token-matched" arm is ~29% heavier by its own methods, never ran on a susceptible
+  model, and the headline 62–100% figure appears only in a figure caption as a range over n=2.
+- 2512.02445: better design (four padding types, two placements), but inertness is an assumption,
+  handled by instructing judges to ignore the padding.
+
+So adding a **manipulation check** puts us ahead of both:
+1. **Null-padding control** — pad with ~0 turns, or pad *after* the decision point. Should produce a
+   null effect. If it doesn't, the padding isn't inert and the whole comparison is void.
+2. **Reference check** — grep every continuation for any mention of the padded commands
+   (`monitoring`, `du -sh`, `echo $SHELL`). If the model ever cites the filler, it isn't inert.
+
+Also to rule out: positional effects (Liu 2307.03172, "Lost in the Middle") and effective-context
+limits (Hsieh 2404.06654, RULER).
+
+**Transcript-only metrics we could add with no new rollouts:**
+- **Unfaithful Illogical Shortcuts** (Arcuschin **v6**, 2503.08679) — the one metric that runs
+  entirely on saved rollouts. 8 Yes/No autorater questions, flagged only on exact match to key
+  `YNNNYNYN`. ⚠️ ~2.6% false-positive rate against genuine human proofs, so human review is
+  mandatory. Cite v6: v1's headline rates were 7–33%, v6's are 0.04–13.5%, and Restoration Errors
+  was demoted to a negative result.
+- **Intent vs use** (Walden & Wanner, 2601.07663) — splits verbalization into `H_I` (CoT states it
+  *will* use the cue) and `H_U` (it actually does). Their finding is our refuse-then-flip: models
+  acknowledge a cue ~100% of the time but state intent to use it ~0–20% while demonstrably using it.
+  **That is a published metric for our table**, computable from saved text plus a judge.
+
+**Caution on refuse-then-flip:** Model Forensics' three behavioural tests for the same belief all
+came back negative, and they state they **lack positive controls** to confirm the tests would detect
+the belief if present. If our rate is non-zero, the first question is whether the judge is detecting
+hedging rather than disclosure.
