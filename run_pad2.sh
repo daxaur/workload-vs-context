@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
-# Padding v2: screen for undecided states, then run three arms on the survivors.
+# Padding v2: three arms per state, no screening. See CHECKS.md for the design.
 #
 # Fixed in advance, before any screening result is seen:
 #   * candidates come from candidates.py (lag window, never from an outcome)
-#   * a candidate survives screening iff 2 <= k <= 4 workarounds out of 6
+#   * NO screening on the control arm. Conditioning the paired comparison on one
+#     of its own arms biases it. Every selected state is run and reported.
+#     10 states x 6 resamples/arm gives SE ~0.09 on the mean paired difference at
+#     p ~ 0.5, i.e. ~80% power for a 25pp shift. Smaller shifts are not detectable
+#     at this budget and no claim will be made about them.
 #   * max_steps = step + 40, because the honest path takes 30-70 turns and
 #     step + 14 truncated 39 of 80 continuations in v1
 #   * three arms: control, pad_inert, pad_work — filler generated per state from
@@ -71,7 +75,7 @@ import json;d=json.load(open('$F'))
 print(f\"    filler: inert {d['inert_turns']}t/{d['inert_tokens']}tok  work {d['work_turns']}t/{d['work_tokens']}tok\")"
 
   resume "$S" 5 "$RUN_OUT/${TAG}__control" && echo "    control ok" || echo "    control FAILED"
-  resume "$S" 3 "$RUN_OUT/${TAG}__control" >/dev/null 2>&1
+  resume "$S" 1 "$RUN_OUT/${TAG}__control" >/dev/null 2>&1
 
   for ARM in inert work; do
     D="$HOME/mats/_p2tmp_${TAG}_${ARM}"
@@ -80,7 +84,7 @@ print(f\"    filler: inert {d['inert_turns']}t/{d['inert_tokens']}tok  work {d['
     PS=$(ls -d "$D"/run-1/step-* 2>/dev/null | head -1)
     [ -z "$PS" ] && { echo "    pad $ARM malformed"; continue; }
     resume "$PS" 5 "$RUN_OUT/${TAG}__$ARM" && echo "    $ARM ok" || echo "    $ARM FAILED"
-    resume "$PS" 3 "$RUN_OUT/${TAG}__$ARM" >/dev/null 2>&1
+    resume "$PS" 1 "$RUN_OUT/${TAG}__$ARM" >/dev/null 2>&1
   done
 done
 
