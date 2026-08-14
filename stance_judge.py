@@ -120,7 +120,14 @@ def collect(prefix: int) -> list[dict]:
     model. The launch condition is recorded, because 0 errors is a trivial task
     and the 51-error condition is the only one holding both classes.
     """
-    roots = [BASE] + sorted((Path.home() / "mats" / "_workload").glob("errors_*"))
+    roots = ([BASE]
+             + sorted((Path.home() / "mats" / "_workload").glob("errors_*"))
+             # Collected AFTER the first judging pass showed the pooled numbers
+             # were a difficulty confound: 30 more rollouts at 51 errors, the one
+             # condition that yields both classes. Kept in its own directory so
+             # the workload dose-response table is not silently enlarged in the
+             # one cell whose result prompted the extra collection.
+             + [Path.home() / "mats" / "_stance51"])
     rows = []
     for root in roots:
         for run in sorted(root.rglob("run-*")):
