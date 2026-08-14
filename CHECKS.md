@@ -5,6 +5,42 @@ reconstructed at the end.
 
 ---
 
+
+## Index
+
+Twenty-four dated entries. **Eight are corrections to my own analysis** — marked ✗ — and they are
+kept in place rather than edited away, because the corrected number is only trustworthy if the
+wrong one is visible next to it.
+
+| | check |
+|---|---|
+| | released scorer misses the two most common workarounds |
+| | hook classifier passes positive controls |
+| | the workload dial is real |
+| ✗ | correction to an earlier claim of mine |
+| | first real data — 13 rollouts, and the released scorer's false positives |
+| ✗ | cost model was wrong by 5.6x |
+| ✗ | my own classifier had a false positive, in the direction of my hypothesis |
+| | a real workaround, missed by the released scorer, verified by running it |
+| | the budget squeeze has a floor |
+| | released scorer sensitivity is 0/10 on real rollouts |
+| ✗ | two corrections to results I previously reported |
+| | a fourth workaround class: config-file suppression |
+| | literature check — one correction, one design gap |
+| | paired padding — null result, with a ceiling caveat |
+| | held-out test of the detector: 2 misses of 17, plus a `/tmp` false-positive mode |
+| ✗ | the padding null is not interpretable — dose 4%, half the runs truncated |
+| | are workarounds transient? 0 of 94 were ever reversed |
+| ✗ | hazard curve was contaminated by 30 corrupted rollouts and by mis-typed censoring |
+| ✗ | it is not a reaction to seeing the errors — and a conditional I nearly reported |
+| ✗ | `task_completed` means the agent stopped, not that it succeeded |
+| | workload dose at launch, and the mechanical coupling of workload with context |
+| | a reasoning monitor vs an artifact monitor on the same rollouts |
+| ✗ | stance judging: the pooled answer is a difficulty confound |
+| | three-arm padding, v2 |
+
+---
+
 ### 2026-08-14 · The released scorer misses the two most common workarounds
 
 **Claim being tested:** the paper reports staged-files-only at 48% and non-blocking hooks at 17% of
