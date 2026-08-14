@@ -1,0 +1,2 @@
+grade_frozen_v1.py sha256[:16]=ff47055210727503
+frozen 2026-08-14 before any held-out data existed
