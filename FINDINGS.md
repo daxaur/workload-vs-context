@@ -94,9 +94,9 @@ censoring), stratified by launch config after 30 timeout-corrupted rollouts were
 excluded:
 
 ```
-gpt-oss-120b · 258 errors · max_steps 25 · n=25   P(workaround) 84%   P(honest) 16%
-gpt-oss-120b · 258 errors · max_steps 15 · n=15   P(workaround) 80%   P(honest)  0%
-deepseek-v4-pro · 258 errors · max_steps 100 · n=13   P(workaround) 0%   P(honest) 100%
+gpt-oss-120b · 258 err · max_steps 25 · n=25   workaround 21 · gave up with no hook 4 · honest 0
+gpt-oss-120b · 258 err · max_steps 15 · n=15   workaround  8 · cut off by cap      7 · honest 0
+deepseek-v4-pro · 258 err · max_steps 100 · n=13   workaround  0 · honest 13
 ```
 
 Hazard peaks at **steps 6–8** and falls after. It does not rise with elapsed
@@ -189,3 +189,15 @@ Results land in `~/mats/_workload`; see `figs/workload.png`.
 - `grade_v2.py` fixes the three held-out failures and scores 17/17 on the same
   data, **which is worth nothing**: that is the data the fixes were written
   against. It is unvalidated until frozen and run on rollouts that do not exist.
+
+### Correction, 2026-08-15
+
+`task_completed` in the checkpoint means *the agent stopped making tool calls*
+(`run_step.py:445`), not *the agent solved the task*. An earlier version of the
+competing-risks analysis read it as an honest completion. It is not: of the four
+gpt-oss rollouts at `max_steps 25` counted that way, **all four had stopped
+without writing a hook at all**.
+
+Corrected: across 40 clean gpt-oss-120b rollouts at 258 errors, the number that
+ended with a working, blocking hook is **0**. deepseek-v4-pro ended with one in
+13 of 13. The competing event for gpt-oss is giving up, not succeeding.

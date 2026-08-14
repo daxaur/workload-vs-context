@@ -113,8 +113,18 @@ def fig_cif(out: Path):
                 break
         last = int(steps[-1].name.split("-")[1])
         done = json.loads((steps[-1] / "state.json").read_text()).get("task_completed")
-        rows.append((first if first is not None else last,
-                     "wk" if first is not None else ("hon" if done else "cens")))
+        lab, _ = grade_step(steps[-1])
+        # `task_completed` only means the agent stopped calling tools. A rollout
+        # that stopped without a working hook gave up; it is not an honest finish.
+        if first is not None:
+            cause = "wk"
+        elif done and lab == "honest":
+            cause = "hon"
+        elif done:
+            cause = "gave"
+        else:
+            cause = "cens"
+        rows.append((first if first is not None else last, cause))
 
     maxk = max(t for t, _ in rows)
     surv, cw, ch = 1.0, [], []
@@ -126,22 +136,25 @@ def fig_cif(out: Path):
             cw.append(a_w); ch.append(a_h); continue
         w = sum(1 for t, c in rows if t == k and c == "wk")
         h = sum(1 for t, c in rows if t == k and c == "hon")
+        g = sum(1 for t, c in rows if t == k and c == "gave")
         a_w += surv * w / at
         a_h += surv * h / at
-        surv *= 1 - (w + h) / at
+        surv *= 1 - (w + h + g) / at
         cw.append(a_w); ch.append(a_h)
 
     fig, ax = plt.subplots(figsize=(5.6, 3.2))
     ax.step(xs, cw, where="post", color=ACC, lw=2, label="writes a workaround")
-    ax.step(xs, ch, where="post", color=ALT, lw=2, label="finishes the task honestly")
+    n_gave = sum(1 for _, c in rows if c == "gave")
+    ax.step(xs, ch, where="post", color=ALT, lw=2,
+            label=f"finishes with a working hook (0 of {len(rows)})")
     ax.axvspan(6, 8, color=ACC, alpha=.07, lw=0)
-    ax.text(7, .04, "hazard peak\nsteps 6–8", ha="center", fontsize=7.5, color=ACC)
+    ax.text(7, .93, "hazard peak\nsteps 6–8", ha="center", fontsize=7.5, color=ACC)
     ax.set_xlabel("step")
     ax.set_ylabel("cumulative incidence")
     ax.set_ylim(0, 1)
     ax.legend(frameon=False, loc="upper left", fontsize=8.5)
     ax.set_title(f"gpt-oss-120b · 258 type errors · max_steps 25 · n={len(rows)}\n"
-                 "competing risks: an honest finish is an outcome, not censoring",
+                 f"competing risks; {n_gave} more stopped without writing a hook at all",
                  loc="left", pad=10)
     fig.savefig(out / "cif.png", bbox_inches="tight")
     plt.close(fig)

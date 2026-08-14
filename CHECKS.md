@@ -705,3 +705,33 @@ across that window — and that window, not step 6–15, is where an interventio
 necessary". Checked: 7 of the 8 **crashed before step 5** (mid-step abort, `task_completed: False`,
 0 mypy invocations). They are dead rollouts, not evidence. Only one ran 19 steps without ever
 invoking mypy, and n=1 supports nothing. The 0/8 is excluded.
+
+---
+
+### 2026-08-15 · `task_completed` DOES NOT MEAN THE TASK WAS DONE
+
+`run_step.py:445` sets `state.task_completed = True` as soon as the model returns
+a message with no tool calls — the session simply ends. With `done_tool: false`
+that is the only path, so the flag records *the agent stopped*, nothing more.
+
+The competing-risks analysis used it as "finished honestly". Checked what those
+rollouts actually contained:
+
+```
+gpt-oss-120b · 258 errors · max_steps 25 · n=25
+   workaround                    21
+   stopped with NO hook           4     <- previously counted as honest finishes
+   stopped with a working hook    0
+deepseek-v4-pro · max_steps 100 · n=13
+   stopped with a working hook   13
+```
+
+So the earlier "P(honest finish) 16%" was wrong: **gpt-oss-120b produced a
+working, blocking hook in 0 of 40 clean rollouts at 258 errors.** The competing
+event is giving up, not succeeding, and `timing.py` now separates
+`honest_finish` / `gave_up` / `censored` as three distinct causes. `figures.py`
+regenerated.
+
+This also affects how any completion-conditioned analysis should be read: in the
+paired data, "completed" meant "stopped", which is why restricting to it did not
+rescue the v1 null.
