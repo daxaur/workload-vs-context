@@ -66,10 +66,25 @@ def _tool_call_id(i: int) -> str:
 
 
 def make_padded(step_dir: Path, out_dir: Path, n_turns: int) -> dict:
-    """Copy a checkpoint and splice n_turns of inert exchange into its history."""
-    if out_dir.exists():
-        shutil.rmtree(out_dir)
-    shutil.copytree(step_dir, out_dir)
+    """Copy a checkpoint and splice n_turns of inert exchange into its history.
+
+    IMPORTANT: resume.py discovers the run config at `step_dir/../../config.yaml`
+    (resume.py:333). So the padded checkpoint must sit inside the same
+    <root>/run-N/step-M/ shape, with config.yaml at the root — otherwise the
+    resume mounts a non-existent path, Docker creates a directory there, and the
+    container dies with "IsADirectoryError: /opt/config.yaml". That failure is
+    silent at the script level: the run is simply reported as failed.
+    """
+    root = out_dir
+    if root.exists():
+        shutil.rmtree(root)
+    dest = root / "run-1" / step_dir.name
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(step_dir, dest)
+    src_cfg = step_dir.parent.parent / "config.yaml"
+    if src_cfg.exists():
+        shutil.copy(src_cfg, root / "config.yaml")
+    out_dir = dest
 
     msgs = json.loads((out_dir / "messages.json").read_text())
 
@@ -159,9 +174,10 @@ def main() -> None:
     a = ap.parse_args()
 
     info = make_padded(a.step_dir, a.out, a.turns)
-    problems = verify(a.step_dir, a.out)
+    problems = verify(a.step_dir, next((a.out / "run-1").glob("step-*")))
 
-    print(f"padded checkpoint → {a.out}")
+    padded_step = next((a.out / "run-1").glob("step-*"))
+    print(f"padded checkpoint → {padded_step}")
     for k, v in info.items():
         print(f"  {k:22} {v}")
     if problems:

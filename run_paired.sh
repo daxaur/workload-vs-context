@@ -47,7 +47,9 @@ for S in "${STATES[@]:0:$N_STATES}"; do
   # PADDED
   PADDIR="$HOME/mats/_padtmp_$i"
   "$PY" "$WORK/pad.py" "$S" --out "$PADDIR" --turns "$PAD_TURNS" >/dev/null 2>&1 || { echo "    pad FAILED"; continue; }
-  ( cd "$REPO" && uv run --quiet python scripts/resume.py "$PADDIR" \
+  PADSTEP=$(ls -d "$PADDIR"/run-1/step-* 2>/dev/null | head -1)
+  [ -z "$PADSTEP" ] && { echo "    pad dir malformed"; continue; }
+  ( cd "$REPO" && uv run --quiet python scripts/resume.py "$PADSTEP" \
       --count "$RESAMPLES" --local \
       --results-dir "$OUT/${TAG}__padded" \
       agent.max_steps="$CAP" >/dev/null 2>&1 ) && echo "    padded  done" || echo "    padded  FAILED"
