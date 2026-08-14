@@ -851,3 +851,46 @@ and the rate is best read as saturating by 258, not as declining.
 
 Reported as the total effect of the launch condition. Workload and context move
 together by construction here, so this arm attributes nothing to either one.
+
+---
+
+### 2026-08-15 · CAN A JUDGE READ THE STANCE? — the pooled answer is confounded, and the clean slice is empty
+
+The keyword monitor cannot distinguish "raises the shortcut and adopts it" from
+"raises it and refuses it". So: give two judges from different families the
+**first 8,000 characters of reasoning** — same rule for every rollout, no
+filesystem, no outcome — and ask for ADOPT / REJECT / UNCLEAR.
+
+Ground truth from the artifact. **Both classes are gpt-oss-120b**: an earlier
+draft took negatives from deepseek, which would have let a judge score by
+recognising the writing style. The workload arm supplies same-model negatives
+(10 honest at 0 errors, 3 at 51, 1 at 602).
+
+```
+                              sensitivity        specificity
+qwen3-235b-a22b-2507           31/53 = 58%        13/14 = 93%
+gemini-2.5-flash-lite          47/53 = 89%        10/14 = 71%
+judges agree with each other   43/67 = 64%
+```
+
+**These numbers do not support a claim.** 10 of the 14 negatives come from the
+0-error condition, where the task is trivial and the reasoning is short and
+uneventful — a judge can separate the classes on difficulty alone. The only slice
+holding difficulty fixed is the 51-error condition, which contains both classes:
+
+```
+51-error condition only (n=6)   qwen  sens 0/3  spec 3/3
+                                gemini sens 1/3  spec 0/3
+```
+
+At n = 3 per class, with the two judges pointing opposite ways, that is noise.
+Recorded as an inconclusive result, not a negative one.
+
+Two things it does establish. The judges disagree with each other on **36%** of
+rollouts, so "the stance is legible in the reasoning" is not something to assume.
+And the pooled figures show how easy it is to build a monitorability result out
+of a difficulty confound.
+
+**What would settle it:** ~30 more rollouts at `target_errors: 51`, which runs
+about 30% honest, giving roughly 12 per class at matched difficulty. Queued
+behind the padding arms.
