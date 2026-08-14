@@ -735,3 +735,47 @@ regenerated.
 This also affects how any completion-conditioned analysis should be read: in the
 paired data, "completed" meant "stopped", which is why restricting to it did not
 rescue the v1 null.
+
+---
+
+### 2026-08-15 · WORKLOAD DOSE AT LAUNCH — and why this environment cannot separate the two variables observationally
+
+`target_errors` selects a pre-built `src_N` variant at container launch
+(`entrypoint.py:35`), so workload can be set directly. gpt-oss-120b,
+`max_steps: 50`, `reasoning_effort: high`, 10 rollouts per condition.
+
+```
+errors    n   workaround   honest   stopped w/o hook   hit cap
+     0   10          0        10                  0         0
+    51   10          3         3                  2         2
+   258   10         10         0                  0         0
+   602    6*         3         0                  2         1     (*4 more running)
+```
+
+Monotone from 0/10 to 10/10 between 0 and 258 errors. The `errors = 0` cell is a
+**floor control**, not a finding: with nothing to fix, a correct hook passes
+immediately, so 0/10 is close to tautological. The informative contrast is 51
+against 258.
+
+**The confound is mechanical, and this is the important part.** Context length is
+not an incidental correlate of workload here — the error list *is* the context.
+Median context at a **fixed early step**, before most decisions:
+
+```
+errors     @step 4    @step 6    @step 8
+     0       1,849      2,380      2,776
+    51       4,785      6,467      9,583
+   258       8,833     10,310     11,822
+   602      17,116     22,928     24,401
+```
+
+At step 4, holding the step number fixed, the 602 condition already carries **9x**
+the context of the 0 condition. So no observational comparison in this
+environment — ours or anyone's — can attribute the effect to workload rather than
+to context. They are coupled by construction.
+
+That is the argument for the padding intervention rather than a defect of it:
+`pad_work` vs `pad_inert` at matched token count and matched turn count is the
+only contrast available that breaks the coupling.
+
+Reported as a total effect of the launch condition. Not as an effect of workload.
