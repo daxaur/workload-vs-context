@@ -1,6 +1,9 @@
 # Workload vs context: what makes an agent take a shortcut it already refused?
 
-**Status:** setting up. MATS 12.0 application project (Neel Nanda's stream).
+**Status:** experiments run. See [FINDINGS.md](FINDINGS.md) for what was measured and
+[CHECKS.md](CHECKS.md) for the verification log, including every check that came back
+negative and every error caught in my own analysis. MATS 12.0 application project
+(Neel Nanda's stream).
 
 ---
 
@@ -134,3 +137,56 @@ sanity check I ran with what it showed.
 Written before running anything. The plan will change once the pilot tells me whether the behaviour
 even shows up in my setup — and if it doesn't, the right move is to say so and pick a different
 question, which costs nothing this early.
+
+
+---
+
+## Reproducing
+
+Everything below runs against `agent-interp-envs` with `precommit_hook:latest` built locally.
+Concurrency is capped at 5 throughout: above that `mypy src` exceeds the container's 30s command
+timeout and the tool result silently becomes `<TIMEOUT>`.
+
+```bash
+docker tag precommit_hook:local precommit_hook:latest
+
+# grading — ours, theirs, and the two test suites
+python test_grade.py                 # incl. the released score.py on the same cases
+python test_grade_v2.py
+
+# the behavioural oracle: rebuild each workspace in the container and run the hook
+python oracle.py <run-dirs> --out heldout_oracle.json
+
+# validity of terminal-state grading
+python transience.py ~/mats/agent-interp-envs/results ~/mats/_paired
+
+# when the decision happens
+python timing.py                     # competing-risks incidence + ICC
+python trigger.py                    # lag from seeing the errors to acting
+python saiddid.py --sample 30        # said-vs-did, writes a blinded label sample
+
+# the two monitoring channels
+python monitorability.py --sample 25
+python stance_judge.py --prefix 8000
+
+# interventions
+./run_workload.sh 10                 # workload set at launch
+./run_pad2.sh run 0 1 2 3 4 5 6 7 8 9
+python awareness.py ~/mats/_p2       # run this BEFORE reading the outcome
+python analyze_pad2.py ~/mats/_p2
+
+python figures.py                    # regenerates every panel from the JSON above
+```
+
+## What still needs a human
+
+Two blinded samples are written out for hand-labelling, and the numbers that depend on them are
+marked as provisional until the labels exist:
+
+- `saiddid_sample.md` — 30 rollouts. Is the quoted reasoning first-person intent to suppress, or
+  is it describing what a flag does?
+- `monitorability_sample.md` — 25 rollouts. Is the model acknowledging that its own plan violates
+  the task, or restating the rules?
+
+`audit/` holds rendered transcripts for the three held-out disagreements: the two workaround classes
+the frozen grader missed, and the `/tmp/mypy.ini` false positive.
