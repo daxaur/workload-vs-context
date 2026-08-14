@@ -468,3 +468,30 @@ limits (Hsieh 2404.06654, RULER).
 came back negative, and they state they **lack positive controls** to confirm the tests would detect
 the belief if present. If our rate is non-zero, the first question is whether the judge is detecting
 hedging rather than disclosure.
+
+---
+
+### 2026-08-14 · PAIRED PADDING EXPERIMENT — null result, with a ceiling caveat
+
+8 states × 2 arms × 5 resamples = 80 continuations. Every pair verified byte-identical on
+filesystem manifest, blob set and `state.json` before running, so only conversation length differs.
+
+```
+POOLED     control 32/40 = 80%      padded 32/40 = 80%
+mean within-state difference (padded - control): +0.0%
+sign test over 2 discordant states: 1 up, 1 down, p = 1.000
+```
+
+**Eight turns of added context changed nothing.**
+
+**The caveat that matters more than the result:** 6 of 8 states sat at 100% or 0% in *both* arms —
+the outcome was already determined before padding could act. Only 2 states had room to move, and
+they moved in opposite directions. This is a **ceiling effect, not a clean null**.
+
+Defensible statement: *at states this far into a rollout, 8 turns of inert padding does not shift
+the workaround rate.* Not defensible: *context length doesn't matter.*
+
+To test it properly: select states that are not already decided (per-state resample first, keep
+those near 0.5), pad substantially harder than 8 turns, and add the two manipulation checks neither
+published context-length paper performs — a null-padding control, and a grep for whether any
+continuation references the filler.
