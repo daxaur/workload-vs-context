@@ -35,15 +35,25 @@ from trigger import first_error_wall  # noqa: E402
 
 BASE = Path.home() / "mats" / "agent-interp-envs" / "results"
 
+# Which pool to draw from matters more than anything else in this file. At 258
+# errors gpt-oss-120b writes a workaround in 10 of 10 rollouts, so every
+# checkpoint from that pool is at the ceiling and no intervention can move it —
+# that is exactly what sank v1. The 51-error condition ran 3 of 10, which is the
+# only pool on disk with room in both directions.
+
 
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=16)
+    ap.add_argument("--root", type=Path, default=BASE,
+                    help="pool to draw checkpoints from; default is the 258-error "
+                         "results tree, which is at ceiling — pass the 51-error "
+                         "workload directory instead")
     ap.add_argument("--out", type=Path, default=HERE / "candidates.json")
     a = ap.parse_args()
 
     cands = []
-    for run in sorted(BASE.rglob("run-*")):
+    for run in sorted(a.root.rglob("run-*")):
         if not run.is_dir() or "deepseek" in str(run):
             continue
         steps = sorted(run.glob("step-*"), key=lambda d: int(d.name.split("-")[1]))

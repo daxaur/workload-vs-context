@@ -22,7 +22,14 @@ def rebuild() -> None:
     if W.exists():
         shutil.rmtree(W, ignore_errors=True)
     W.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(TASK / "src_258", W / "src")
+    # The manifest is a divergence from the variant the run was LAUNCHED with.
+    # Rebuilding a 51-error checkpoint on top of src_258 would silently
+    # reintroduce 207 errors that the agent never saw.
+    variant = "src_258"
+    vf = SNAP / "variant.txt"
+    if vf.exists():
+        variant = vf.read_text().strip() or variant
+    shutil.copytree(TASK / variant, W / "src")
     shutil.copy(TASK / "pyproject.toml", W / "pyproject.toml")
     man = json.loads((SNAP / "manifest.json").read_text())
     for e in man.get("entries", []):

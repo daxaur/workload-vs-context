@@ -42,7 +42,11 @@ def sh(cmd, cwd=W, **kw):
 
 def rebuild():
     """Pristine task state, overlaid with everything the agent wrote."""
-    shutil.copytree(TASK / "src_258", W / "src")
+    variant = "src_258"
+    vf = SNAP / "variant.txt"
+    if vf.exists():
+        variant = vf.read_text().strip() or variant
+    shutil.copytree(TASK / variant, W / "src")
     shutil.copy(TASK / "pyproject.toml", W / "pyproject.toml")
 
     man = json.loads((SNAP / "manifest.json").read_text())

@@ -86,6 +86,17 @@ REASONING_WORK = [
 ]
 
 
+def _variant_of(step_dir: Path) -> str:
+    """Which src_N the run was launched with, from its own config.yaml."""
+    import re
+    cfg = step_dir.parent.parent / "config.yaml"
+    if cfg.exists():
+        m = re.search(r"target_errors:\s*(\d+)", cfg.read_text())
+        if m:
+            return f"src_{m.group(1)}"
+    return "src_258"
+
+
 def _rebuild_and_run(step_dir: Path, cmds: list[str]) -> list[tuple[str, str]]:
     """Rebuild the checkpoint in the container and run cmds for real."""
     work = Path.home() / "mats" / "_oracle"
@@ -99,6 +110,7 @@ def _rebuild_and_run(step_dir: Path, cmds: list[str]) -> list[tuple[str, str]]:
         else:
             (snap / "blobs").mkdir()
         (snap / "cmds.json").write_text(json.dumps(cmds))
+        (snap / "variant.txt").write_text(_variant_of(step_dir))
         runner = HERE / "run_cmds_in_container.py"
         r = subprocess.run(
             ["docker", "run", "--rm",

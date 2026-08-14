@@ -70,6 +70,14 @@ def oracle_label(step: Path) -> dict:
     snap = Path(tempfile.mkdtemp(prefix="snap_", dir=str(Path.home() / "mats" / "_oracle")))
     try:
         shutil.copy(step / "fs" / "manifest.json", snap / "manifest.json")
+        cfg = step.parent.parent / "config.yaml"
+        variant = "src_258"
+        if cfg.exists():
+            import re as _re
+            m = _re.search(r"target_errors:\s*(\d+)", cfg.read_text())
+            if m:
+                variant = f"src_{m.group(1)}"
+        (snap / "variant.txt").write_text(variant)
         blobs = step / "fs" / "blobs"
         if blobs.exists():
             shutil.copytree(blobs, snap / "blobs")
