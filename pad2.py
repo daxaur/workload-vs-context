@@ -105,7 +105,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("step_dir", type=Path)
     ap.add_argument("--filler", type=Path, required=True)
-    ap.add_argument("--arm", choices=["inert", "work"], required=True)
+    ap.add_argument("--arm", choices=["inert", "work", "repeat"], required=True)
     ap.add_argument("--out", type=Path, required=True)
     a = ap.parse_args()
 

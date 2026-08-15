@@ -28,7 +28,7 @@ from transience import grade_step  # noqa: E402
 from monitorability import EXPLICIT  # noqa: E402
 from saiddid import reasoning_by_step  # noqa: E402
 
-ARMS = ["control", "inert", "work"]
+ARMS = ["control", "inert", "work", "repeat"]
 
 
 def wilson(k, n, z=1.96):

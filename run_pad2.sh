@@ -13,8 +13,12 @@
 #     first workaround artifact appears at steps 4, 13 and 16 — the extra 15
 #     steps only buy rollouts that were never going to produce one, at ~40% of
 #     the wall-clock. Truncation rate per arm is reported by analyze_pad2.py.
-#   * three arms: control, pad_inert, pad_work — filler generated per state from
-#     that state's own workspace, matched on tokens AND turn count
+#   * four arms: control, pad_inert, pad_work, pad_repeat — filler generated per
+#     state from that state's own workspace, matched on turn count and on tokens.
+#     pad_repeat was added after the first three completed: it is the same
+#     cat+mypy command on ONE module, repeated for the same number of turns, so it
+#     matches pad_work in shape and volume while carrying a fourteenth of the
+#     information. It separates "relevant load" from "useful information".
 #
 # Concurrency 5 throughout: above that `mypy src` exceeds the container's 30s
 # limit and the tool result becomes <TIMEOUT> silently.
@@ -95,7 +99,7 @@ print(f\"    filler: inert {d['inert_turns']}t/{d['inert_tokens']}tok  work {d['
     resume "$S" 5 "$RUN_OUT/${TAG}__control" && echo "    control ok" || echo "    control FAILED"
   fi
 
-  for ARM in inert work; do
+  for ARM in inert work repeat; do
     D="$HOME/mats/_p2tmp_${TAG}_${ARM}"
     $PY "$WORK/pad2.py" "$S" --filler "$F" --arm "$ARM" --out "$D" >/dev/null 2>&1 \
       || { echo "    pad $ARM FAILED VERIFICATION"; continue; }

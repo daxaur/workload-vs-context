@@ -161,6 +161,15 @@ def build(step_dir: Path, target_tokens: int, max_turns: int = 30) -> dict:
     # dose of the same one.
     work_cmds = [f"cd /agent && cat src/{m}.py && mypy src/{m}.py" for m in WORK_MODULES]
     work_pairs = _rebuild_and_run(step_dir, work_cmds)
+    # THIRD PADDING TYPE, added 2026-08-15 to resolve the confound the first run
+    # exposed. `work` is task-relevant AND informative: it hands the model 14
+    # modules' contents and their per-module error lists, which is a head start on
+    # the honest path. `repeat` is the same command on ONE module, issued as many
+    # times as `work` has turns — identical shape, identical volume, roughly a
+    # fourteenth of the information. If the effect survives here it is about
+    # relevant load; if it vanishes it was about information.
+    repeat_pairs = _rebuild_and_run(
+        step_dir, [f"cd /agent && cat src/{WORK_MODULES[0]}.py && mypy src/{WORK_MODULES[0]}.py"])
 
     def grow(pairs, reasoning, prefix, n_turns):
         turns = []
@@ -179,6 +188,7 @@ def build(step_dir: Path, target_tokens: int, max_turns: int = 30) -> dict:
     n_turns = min(n_turns, max_turns)
     work = grow(work_pairs, REASONING_WORK, "pw", n_turns)
     inert = grow(inert_pairs, REASONING_INERT, "pi", n_turns)
+    repeat = grow(repeat_pairs, REASONING_WORK, "pr", n_turns) if repeat_pairs else []
 
     # Trim the heavier arm's tool outputs (never its turn count) until the token
     # totals are within 5%.
@@ -191,14 +201,23 @@ def build(step_dir: Path, target_tokens: int, max_turns: int = 30) -> dict:
                     m["content"] = m["content"][: int(len(m["content"]) * 0.9)]
         return turns
 
+    # inert and work are matched to each other exactly as they were when those
+    # arms were run. `repeat` is added afterwards and matched to the SAME target,
+    # so it is comparable with continuations already on disk. Folding it into the
+    # min would have shrunk all three to a new, smaller budget and made the new
+    # arm incomparable with the completed ones.
     lo = min(_tok(inert), _tok(work))
     inert, work = shrink(inert, lo), shrink(work, lo)
+    if repeat:
+        repeat = shrink(repeat, lo)
 
     return {
         "step_dir": str(step_dir),
-        "inert": inert, "work": work,
+        "inert": inert, "work": work, "repeat": repeat,
         "inert_tokens": _tok(inert), "work_tokens": _tok(work),
+        "repeat_tokens": _tok(repeat),
         "inert_turns": len(inert) // 2, "work_turns": len(work) // 2,
+        "repeat_turns": len(repeat) // 2,
         "distinct_inert_commands": len(inert_pairs),
         "distinct_work_commands": len(work_pairs),
     }
@@ -214,7 +233,7 @@ def main() -> None:
     info = build(a.step_dir, a.target_tokens, a.max_turns)
     a.out.write_text(json.dumps(info, indent=2))
     for k, v in info.items():
-        if k not in ("inert", "work"):
+        if k not in ("inert", "work", "repeat"):
             print(f"  {k:26} {v}")
 
 
