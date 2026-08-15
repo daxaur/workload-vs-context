@@ -58,9 +58,20 @@ have() {  # <results-dir> <count>  -> 0 if already satisfied
   [ "$n" -ge "$2" ]
 }
 
+# resume.py always writes run-1..run-N into whatever results dir it is given, so
+# pointing a second batch at the same directory OVERWRITES the first rather than
+# adding to it. Discovered 2026-08-15 after a "top-up" pass silently regenerated
+# the same five continuations several times. Each batch therefore gets its own
+# subdirectory; the analysis walks recursively, so they pool correctly.
 resume() {  # <step-dir> <count> <results-dir>
+  local dest="$3"
+  if [ -d "$dest" ] && [ -n "$(find "$dest" -maxdepth 2 -type d -name 'run-*' 2>/dev/null)" ]; then
+    local b=1
+    while [ -d "$dest/batch-$b" ]; do b=$((b+1)); done
+    dest="$dest/batch-$b"
+  fi
   ( cd "$REPO" && uv run --quiet python scripts/resume.py "$1" \
-      --count "$2" --local --results-dir "$3" \
+      --count "$2" --local --results-dir "$dest" \
       agent.max_steps="$(cap_of "$1")" >/dev/null 2>&1 )
 }
 

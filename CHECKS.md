@@ -1754,3 +1754,42 @@ the `explicit` tier alone understates.
 correctness. What it buys is a shortlist: seven passages where the regex and three
 independent raters disagree are where a human reading changes a number, and they
 are named in `rater_check.json`.
+
+---
+
+### 2026-08-15 · A TOP-UP THAT OVERWROTE INSTEAD OF ADDING — my own bug, and what it cost
+
+To lift the four-arm result off 2–10 events per cell I raised the per-arm target
+from 5 continuations to 10 and re-invoked the runner. Across several relaunch
+cycles the counts never moved: control, work and repeat stayed at exactly 60.
+
+Cause: **`resume.py` always writes `run-1 … run-N` into whatever results directory
+it is given.** Pointing a second batch at the same directory overwrites the first
+rather than appending. Every "top-up" pass regenerated the same five slots.
+
+**What it cost.** The continuations underlying the numbers reported earlier no
+longer all exist — some were replaced by fresh samples of the same states. Grading
+the current state of disk against what was reported:
+
+```
+                   reported          on disk now
+control  hook        2/60               2/60
+inert    hook        3/58               3/58
+work     hook       10/60              10/60
+repeat   hook        2/60               0/60
+```
+
+The headline is unchanged and, in the `repeat` arm, slightly stronger than
+reported. A few other cells moved by one continuation. **The current on-disk
+grading is the authoritative version**; the earlier `repeat 2/60` should be read
+as `0/60`, and the change is resampling noise from my overwrite, not a correction
+to the analysis.
+
+**Fixed.** Each batch now lands in its own `batch-N` subdirectory. The analysis
+already walks recursively, so batches pool correctly and a second batch adds to
+the first instead of replacing it.
+
+**The lesson is not "be careful".** It is that a top-up which silently no-ops
+looks identical to a top-up that is merely slow, and the only thing that
+distinguished them was checking the count rather than trusting `control ok` in the
+log. The runner printed success on every one of those passes.
