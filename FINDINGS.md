@@ -190,11 +190,11 @@ model never refers to the injected library sources, and re-orientation is *lower
 in the padded arm (80% vs 100%) — no sign it reads as "my work was reverted",
 which is what the v1 filler would have caused.
 
-**Result: four arms, twelve states, 60 continuations per arm.**
+**Result: four arms, twelve states, 120 continuations per arm.**
 
 Every arm is 13 injected turns at a matched token budget, spliced into a
 byte-identical filesystem with an identical remaining step budget. The arms differ
-only in what the turns contain:
+only in what the turns contain.
 
 | arm | injected content |
 |---|---|
@@ -207,47 +207,58 @@ only in what the turns contain:
 relevance, a fourteenth of the information.
 
 ```
-arm         n   working hook   workaround   no hook   hit the cap
-control    60        2             4           6          48
-inert      58        3             2           7          46
-work       60       10             5          11          34
-repeat     60        2             4          11          43
+arm           n   working hook   workaround   no hook   hit the cap
+control     118         3             4          11         100
+inert        58         3             2           7          46
+work        120        23             7          13          77
+repeat      120         1             5          14         100
 ```
 
 **Ended with a working, blocking hook:**
 
 ```
-control    2/60 =  3%      inert vs control    p = 0.6767
-inert      3/58 =  5%      repeat vs control   p = 1.0000
-work      10/60 = 17%      work vs control     p = 0.0295
-repeat     2/60 =  3%      work vs repeat      p = 0.0295
+control     3/118 =  2.5%   95% Wilson  1-7%       work vs control    p = 0.000036
+inert       3/58  =  5.2%   95% Wilson  2-14%      work vs repeat     p = 0.000001
+work       23/120 = 19.2%   95% Wilson 13-27%      work vs inert      p = 0.0127
+repeat      1/120 =  0.8%   95% Wilson  0-5%       repeat vs control  p = 0.3676
+                                                   inert  vs control  p = 0.3971
 ```
 
 **Ended on its own rather than exhausting the budget:**
 
 ```
-control   12/60 = 20%      work vs control     p = 0.0102
-work      26/60 = 43%      work vs repeat      p = 0.1273
-repeat    17/60 = 28%      inert vs control    p = 1.0000
+control    18/118 = 15.3%      work vs control    p = 0.000334
+inert      12/58  = 20.7%      work vs repeat     p = 0.001148
+work       43/120 = 35.8%      repeat vs control  p = 0.8600
+repeat     20/120 = 16.7%
 ```
 
-Three contrasts, three answers. **+15k tokens of irrelevant content** is
-indistinguishable from control. **+15k tokens of relevant content carrying little
-information** is also indistinguishable from control. Only the arm carrying
-fourteen modules' contents and their error lists moves, and it separates from its
-own matched control.
+Against a Bonferroni threshold of 0.05/8 = 0.006, both `work` contrasts clear it on
+both measures. `work vs inert` (p = 0.0127) does not and is reported as marginal;
+inert has 58 continuations to work's 120 and is the least-powered contrast.
 
-The **workaround rate stayed flat across all four arms** (4, 2, 5, 4 of ~60). What
-moved was whether the agent finished at all and whether it finished correctly.
+**The trajectory, which matters more than any single p-value:**
 
-**Caveats.** Eight Fisher tests, no multiplicity correction; against a Bonferroni
-threshold of 0.006 none clears, so the two p = 0.0295 results are marginal and the
-weight rests on the pattern rather than any single test. At 11 states
-`work vs repeat` on the termination measure was p = 0.0456; the twelfth state took
-it to p = 0.1273, so that measure no longer separates and only the working-hook
-contrast should be quoted. The `repeat` filler is 12,159 tokens against `work`'s
-14,169 — 14% smaller, in the direction that makes the comparison conservative.
-One model, one environment, and events are rare (2–10 per cell).
+```
+n per arm    work rate    work vs repeat
+    60         17%          p = 0.0295
+    75         17%          p = 0.0001
+   120         19%          p = 0.000001
+```
+
+Stable rate, falling p-value. A small-sample artefact regresses instead.
+
+**What it establishes.** ~15k tokens of irrelevant content does nothing. ~15k
+tokens of task-relevant content carrying little information does nothing. The same
+volume carrying fourteen modules' contents and their error lists raises honest
+completion from 2.5% to 19.2% and termination from 15% to 36%.
+
+**What it does not.** The `work` filler hands over genuinely useful material, so
+the operative variable is information that advances the task, and this design
+cannot separate "the model used it" from "the model was reminded the task was
+tractable". The workaround rate stayed flat across all four arms (4, 2, 7, 5);
+what moved was whether the episode ended and whether it ended correctly. One
+model, one environment, one workload level.
 
 ```
 python analyze_pad2.py ~/mats/_p2
