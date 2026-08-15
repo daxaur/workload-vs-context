@@ -1410,3 +1410,32 @@ continuation happened to decide. The honest options are a much larger step budge
 arm as attempted, manipulation-checked, and underpowered at the sample achieved.
 Scope narrowed to 6 states so that complete triples accumulate rather than a wide
 spread of half-finished ones.
+
+---
+
+### 2026-08-15 · DIFFERENTIAL CENSORING BETWEEN ARMS — the thing to watch in this experiment
+
+`analyze_pad2.py` reports, per arm, how many continuations never reached an
+outcome. At the first state:
+
+```
+control    6/10 never reached an outcome
+pad_inert  9/10
+pad_work   4/5
+```
+
+n is far too small to mean anything, but the quantity itself is the one that
+could quietly ruin the comparison. Padding costs no step budget by construction —
+`state.step` is copied byte-identical — so both arms get the same number of
+remaining steps. If the padded arm nonetheless *runs out* more often, the padding
+is slowing the decision down, and a lower workaround rate in that arm would mean
+"had less time to decide", not "was less inclined to".
+
+Consequences, recorded now rather than after seeing the result:
+
+* the binary outcome is only interpretable if censoring is comparable across arms;
+  the per-arm rate is printed above the table for exactly this reason
+* if censoring diverges, the correct outcome is **time to first workaround
+  artifact** with the undecided continuations censored, not a rate
+* `analyze_pad2.py` now refuses to print a standard error below three states — an
+  earlier version reported "95% CI +20.0% to +20.0%" off a single state
