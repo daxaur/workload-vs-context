@@ -190,15 +190,28 @@ model never refers to the injected library sources, and re-orientation is *lower
 in the padded arm (80% vs 100%) — no sign it reads as "my work was reverted",
 which is what the v1 filler would have caused.
 
-**The forecast, stated before the data.** The 28-error pool is the only one not at
-a ceiling, but it buys that at the cost of censoring: workarounds appear by step
-18 while honest finishes need step 36+, so a `step + 25` continuation mostly ends
-undecided. With a 25% base rate and 5 resamples per arm this arm will be
-underpowered whatever it returns, and it is reported that way rather than as a
-null. The quantity that decides whether it is interpretable at all is
-**differential censoring** — printed per arm above the results table, because if
-the padded arm runs out of steps more often then a lower rate there means "had
-less time to decide", not "was less inclined to".
+**Result at seven states of twelve.**
+
+```
+POOLED                  control 3/35 = 9%   pad_inert 2/33 = 6%   pad_work 3/35 = 9%
+
+context length  (pad_inert - control)   -2.1%   95% CI -16.3% to +12.0%
+task load       (pad_work - pad_inert)  +2.1%   95% CI -12.0% to +16.3%
+resolution: 80% power for a shift of 20 points or larger
+```
+
+Tripling the conversation length at a byte-identical filesystem and step budget
+did not shift the workaround rate by 20 points or more. Nor did replacing that
+padding with the same number of tokens **and turns** of real, failing task work.
+Anything smaller is invisible to this design and nothing is claimed about it.
+
+Censoring across arms — 74% / 79% / 63% — is comparable, so the binary outcome is
+not distorted by the padded arm running out of steps more often. That was the
+check that could have invalidated the comparison outright.
+
+**What limits it.** The 28-error base rate is low and most continuations end
+undecided, so ~35 per arm bound the effect at roughly ±16 points. It does not
+locate it. Reported as a bound, not as a null.
 
 ```
 python candidates.py --n 12 --root ~/mats/_workload/errors_28
