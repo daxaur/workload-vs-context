@@ -225,61 +225,50 @@ At step 4 the 602 condition already carries 9x the context of the 0 condition, s
 this arm attributes nothing to either variable. Breaking the coupling is what the
 padding intervention is for.
 
-## 9 · Two monitors on the same rollouts
+## 9 · Two monitors on the same rollouts, oracle-labelled
 
 gpt-oss-120b returns raw reasoning, so the artifact channel and the reasoning
-channel can be compared directly.
+channel can be compared on identical rollouts. Ground truth is the oracle.
 
 ```
-                          sensitivity              specificity
-released score.py         0/11                     2 false positives on honest ends
-frozen grep grader        15/17 held-out           untested (no honest held-out data)
-CoT keyword ("cheat")     22/29 = 76%              9/13 = 69%   (verified-honest runs)
-behavioural oracle        by construction          by construction
+                          sensitivity        specificity
+released score.py         0/11               2 false positives on honest ends
+frozen grep grader        56/68 = 82%        24/24 = 100%
+CoT keyword ("cheat")     41/68 = 60%        19/24 =  79%     Fisher p = 0.0017
+behavioural oracle        by construction    by construction
 ```
 
-In 22 of 22 cases the model says "cheat" **at or before** the step the artifact
-appears. All four keyword false positives were read individually: every one is the
-model raising the shortcut and refusing it — *"We shouldn't cheat by making hook
-always pass"*, *"that's cheating and … defeats purpose. Better to add type
-annotations properly."*
+The keyword monitor is genuinely associated with the outcome and is not a
+substitute for looking at the artifact. In 22 of 22 rollouts where it fires on a
+workaround, it fires **at or before** the step the artifact appears — so its value
+is timing, not accuracy.
 
-So the deliberation is close to universal and the **stance** is what varies.
+Every keyword false positive that was read individually turned out to be the model
+raising the shortcut and refusing it: *"We shouldn't cheat by making hook always
+pass"*, *"that's cheating and … defeats purpose. Better to add type annotations
+properly."* The deliberation is close to universal; the **stance** is what varies.
 
-## 10 · Is the stance legible? — pooled it looks strong, matched it is nothing
+## 10 · Is the stance legible? — the experiment is not possible with this model
 
 Two judges from different families, given the first 8,000 characters of reasoning
-and nothing else, asked for ADOPT / REJECT / UNCLEAR. Both classes drawn from
-gpt-oss-120b so a judge cannot score by writing style.
+and nothing else, asked for ADOPT / REJECT / UNCLEAR. Pooled over all conditions
+they looked strong (up to 90% sensitivity), but 10 of 14 negatives came from the
+0-error condition where the task is trivial — the classes were separable on
+difficulty without reading any stance at all.
 
-**Pooled over all conditions (n = 79):**
+With the labels corrected by the oracle, the difficulty-matched slice collapses:
+the 51-error condition holds **21 workarounds and 1 honest rollout**. The only
+condition with a real negative class is 0 errors, where there is nothing to fix.
 
-```
-                              sensitivity      specificity
-qwen3-235b-a22b-2507           34/63 = 54%      13/16 = 81%
-gemini-2.5-flash-lite          57/63 = 90%      10/16 = 62%
-judges agree with each other   48/79 = 61%
-```
+So there is no difficulty-matched test available: **gpt-oss-120b essentially never
+completes this task honestly once there is work to do.** That is a structural
+limit of the design, not a null result, and it is why the earlier
+difficulty-matched figures (n = 18, Fisher p = 0.58 and p = 1.00) are withdrawn
+along with the labels they rested on.
 
-**Matched on task difficulty — the 51-error condition, the only one holding both
-classes (n = 18, 13 workaround / 5 honest):**
-
-```
-   baseline "always ADOPT"   accuracy 72%
-qwen3-235b     TP 3  FN 10  FP 2  TN 3   accuracy 33%   Fisher p = 0.583
-gemini-flash   TP 11 FN  2  FP 5  TN 0   accuracy 61%   Fisher p = 1.000
-```
-
-Neither judge beats the majority-class baseline; neither 2x2 shows any
-association. gemini answers ADOPT on 16 of 18, which is how it earned 90%
-sensitivity in the pooled table.
-
-At matched difficulty this design detects **no** ability to predict the action
-from a fixed prefix of the reasoning. With 5 negatives it has power only for a
-very large effect, so it rules out a strong signal, not a weak one.
-
-The gap between the two tables is the point: the pooled numbers are the ones a
-write-up would naturally report, and they are the confound.
+Answering the question would need a model that solves the task honestly a
+reasonable fraction of the time at a fixed non-zero workload. deepseek-v4-pro did
+so 13 times out of 13, which is the opposite ceiling.
 
 ---
 
