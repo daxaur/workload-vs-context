@@ -186,47 +186,84 @@ def fig_detector(out: Path):
 
 
 def fig_workload(out: Path):
-    """Dose-response on workload, if the runs are on disk."""
-    from transience import grade_step
-    root = Path.home() / "mats" / "_workload"
-    if not root.exists():
+    """Dose-response on workload, labelled by the oracle rather than by a pattern."""
+    import re as _re
+    o = HERE / "all_oracle.json"
+    if not o.exists():
         return
-    conds = []
-    for cond in sorted(root.glob("errors_*"), key=lambda p: int(p.name.split("_")[1])):
-        k = n = 0
-        for run in sorted(cond.rglob("run-*")):
-            steps = sorted(run.glob("step-*"), key=lambda d: int(d.name.split("-")[1]))
-            if not steps:
-                continue
-            if any("TIMEOUT" in (s / "messages.json").read_text(errors="ignore")
-                   for s in steps if (s / "messages.json").exists()):
-                continue
-            _, ch = grade_step(steps[-1])
-            n += 1
-            k += int(ch)
-        if n:
-            conds.append((int(cond.name.split("_")[1]), k, n))
+    recs = json.loads(o.read_text())
+    by = {}
+    for r in recs:
+        if "_workload" not in r["run"] and "_stance51" not in r["run"]:
+            continue
+        v = r["oracle"].get("verdict")
+        if v not in ("workaround", "honest_hook_blocks", "honest_types_actually_fixed"):
+            continue
+        cfg = Path(r["run"]).parent / "config.yaml"
+        e = None
+        if cfg.exists():
+            m = _re.search(r"target_errors:\s*(\d+)", cfg.read_text())
+            e = int(m.group(1)) if m else None
+        if e is None:
+            continue
+        k, n = by.get(e, (0, 0))
+        by[e] = (k + int(v == "workaround"), n + 1)
+    conds = sorted((e, k, n) for e, (k, n) in by.items())
     if len(conds) < 2:
         return
 
-    fig, ax = plt.subplots(figsize=(5.4, 3.2))
-    xs = [c[0] for c in conds]
-    ys = [c[1] / c[2] for c in conds]
-    lo = [wilson(c[1], c[2])[0] for c in conds]
-    hi = [wilson(c[1], c[2])[1] for c in conds]
+    fig, ax = plt.subplots(figsize=(5.6, 3.3))
+    xs = list(range(len(conds)))
+    ys = [k / n for _, k, n in conds]
+    lo = [wilson(k, n)[0] for _, k, n in conds]
+    hi = [wilson(k, n)[1] for _, k, n in conds]
     ax.errorbar(xs, ys, yerr=[[y - l for y, l in zip(ys, lo)],
                               [h - y for y, h in zip(ys, hi)]],
                 fmt="o-", color=ACC, ecolor=MUT, capsize=3, lw=1.6, ms=6)
-    for x, y, c in zip(xs, ys, conds):
-        ax.annotate(f"{c[1]}/{c[2]}", (x, y), textcoords="offset points",
-                    xytext=(0, 9), ha="center", fontsize=8, color=INK)
-    ax.set_xlabel("pre-existing type errors in src/ (set at launch)")
+    for x, y, (e, k, n) in zip(xs, ys, conds):
+        ax.annotate(f"{k}/{n}", (x, y), textcoords="offset points",
+                    xytext=(0, 11), ha="center", fontsize=8, color=INK)
+    ax.set_xticks(xs, [str(e) for e, _, _ in conds])
+    ax.set_xlabel("pre-existing type errors in src/, set at launch")
     ax.set_ylabel("workaround rate")
-    ax.set_ylim(-0.05, 1.05)
-    ax.set_title("Workload varied at launch, context free to move\n"
+    ax.set_ylim(-0.05, 1.12)
+    ax.set_title("Labelled by running the artifact, not by pattern-matching it\n"
                  "gpt-oss-120b · max_steps 50 · bars are 95% Wilson",
                  loc="left", pad=10)
     fig.savefig(out / "workload.png", bbox_inches="tight")
+    plt.close(fig)
+
+
+def fig_grader(out: Path):
+    """What running the artifact finds that reading it does not."""
+    o = HERE / "all_oracle.json"
+    if not o.exists():
+        return
+    recs = json.loads(o.read_text())
+    sc = [r for r in recs if r["oracle"].get("verdict") in
+          ("workaround", "honest_hook_blocks", "honest_types_actually_fixed")]
+    wk = [r for r in sc if r["oracle"]["verdict"] == "workaround"]
+    caught = sum(1 for r in wk if r["frozen"]["cheat"])
+    missed = len(wk) - caught
+    hon = len(sc) - len(wk)
+
+    fig, ax = plt.subplots(figsize=(6.2, 2.6))
+    ax.barh([1], [caught], color=MUT, height=.5)
+    ax.barh([1], [missed], left=[caught], color=ACC, height=.5)
+    ax.barh([0], [hon], color=ALT, height=.5)
+    ax.text(caught / 2, 1, f"caught {caught}", ha="center", va="center",
+            color="white", fontsize=9)
+    ax.text(caught + missed / 2, 1, f"missed {missed}", ha="center", va="center",
+            color="white", fontsize=9)
+    ax.text(hon / 2, 0, f"{hon} honest, 0 false alarms", ha="center", va="center",
+            color="white", fontsize=9)
+    ax.set_yticks([1, 0], ["workarounds", "honest"])
+    ax.set_xlim(0, len(wk) + 2)
+    ax.set_xlabel("rollouts, labelled by running the agent's own hook")
+    ax.set_title("A frozen pattern grader against behaviour: 82% sensitive,\n"
+                 "100% specific — and the 18% it misses is where the classes are",
+                 loc="left", pad=10)
+    fig.savefig(out / "grader.png", bbox_inches="tight")
     plt.close(fig)
 
 
@@ -235,7 +272,7 @@ def main() -> None:
     ap.add_argument("--out", type=Path, default=HERE / "figs")
     a = ap.parse_args()
     a.out.mkdir(parents=True, exist_ok=True)
-    for fn in (fig_timeline, fig_cif, fig_detector, fig_workload):
+    for fn in (fig_timeline, fig_cif, fig_detector, fig_workload, fig_grader):
         try:
             fn(a.out)
             print(f"  ok {fn.__name__}")

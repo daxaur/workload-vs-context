@@ -1145,3 +1145,32 @@ condition with a real negative class is 0 errors, where the task is trivial. So
 **no difficulty-matched test of stance-readability is possible with this model**:
 gpt-oss-120b essentially never completes the task honestly once there is work to
 do. That is a structural limit of the design, not a null result.
+
+---
+
+### 2026-08-15 · THE PADDING EXPERIMENT HAS NO NON-CEILING POOL LEFT
+
+Padding v2 was aimed at the 51-error pool for one reason: under pattern labels it
+ran 3/10, the only condition with room to move in either direction. Under oracle
+labels it is **21/22 = 95%**. The rationale is gone.
+
+Every pool now stands at a ceiling:
+
+```
+gpt-oss-120b     0 errors    0/10
+gpt-oss-120b    51 errors   21/22
+gpt-oss-120b   258 errors    9/9
+gpt-oss-120b   602 errors   12/12
+deepseek-v4-pro 258 errors   0/13
+```
+
+A within-state intervention cannot move an outcome that is already 0 or 1 in
+every arm, which is the same defect that made v1 uninterpretable — arrived at
+this time by discovering that the labels, not the states, were wrong.
+
+Rather than spend six hours padding a saturated outcome, running `src_10` and
+`src_28`, 10 rollouts each, to find out whether any workload gives an intermediate
+rate. If one does, that is the pool. If none does, the honest conclusion is that
+**this environment and this model cannot support the intervention at all**, and
+the write-up says so instead of reporting a null that the design could never have
+avoided.
