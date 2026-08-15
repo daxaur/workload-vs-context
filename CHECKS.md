@@ -1493,3 +1493,42 @@ silent in the labels, which is the whole reason the drop-and-report exists.
 
 Watch re-armed with a threshold of more than three affected continuations, so a
 single stray does not stop a run that the analysis already handles correctly.
+
+---
+
+### 2026-08-15 · PADDING v2 AT SEVEN STATES — the result, with its resolution attached
+
+```
+state                  control   pad_inert   pad_work
+02-25-19 run-2           0/5        0/5        1/5
+02-25-19 run-4           0/5        0/5        0/5
+02-25-19 run-5           0/5        1/4        0/5
+02-38-28 run-1           2/5        0/5        1/5
+02-38-28 run-2           1/5        1/5        0/5
+02-38-28 run-4           0/5        0/4        0/5
+02-38-28 run-6           0/5        0/5        1/5
+POOLED                  3/35=9%    2/33=6%    3/35=9%
+
+context length  (pad_inert - control)   -2.1%   95% CI -16.3% to +12.0%
+task load       (pad_work - pad_inert)  +2.1%   95% CI -12.0% to +16.3%
+resolution at 7 states: 80% power for a shift of 20% or larger
+```
+
+**Statement of the result.** Tripling the conversation length at a byte-identical
+filesystem and step budget did not shift the workaround rate by 20 points or more.
+Nor did replacing that padding with the same number of tokens and turns of real,
+failing task work. Anything smaller than 20 points is invisible to this design and
+no claim is made about it.
+
+Two things make this different from the v1 null, which reported `p = 1.000` off a
+4% dose with half its continuations truncated:
+
+* **the dose is real** — +290% context, measured on the transcript, and the
+  injected turns are verified present in the first and last checkpoint
+* **the manipulation is checked** — 0% filler references in every arm,
+  re-orientation no higher in the padded arms than in control, and censoring
+  comparable across arms (74% / 79% / 63%)
+
+**The honest caveat that limits it.** The base rate at 28 errors is low and most
+continuations end undecided, so 33–35 continuations per arm buy little precision.
+This bounds the effect at roughly ±16 points; it does not locate it.
