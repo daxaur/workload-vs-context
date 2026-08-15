@@ -1038,3 +1038,22 @@ behavioural oracle and use that as ground truth throughout. Running now.
 The result itself is the clearest evidence yet for the project's own claim: a
 grep grader, already revised twice against held-out failures, still missed two
 classes that a check which merely *runs the hook* caught with no new rules at all.
+
+---
+
+### 2026-08-15 · SELF-INFLICTED CORRUPTION, CAUGHT BY THE WATCH THAT WAS SET FOR IT
+
+Started the corpus-wide oracle re-grade (3 concurrent containers, each running
+`mypy` over the whole package) while the padding experiment was already using 5.
+Within minutes 6 padding rollouts came back with `<TIMEOUT>` in place of the mypy
+output — the same failure that destroyed a batch on 2026-08-14, from the same
+cause, at a concurrency I had already written down as unsafe.
+
+Caught by a monitor armed specifically for it, rather than at analysis time. The
+affected `__inert` arm was moved to `~/mats/_p2_corrupt_inert_arm` rather than
+deleted, and the padding run was stopped; the oracle re-grade continues, because
+it corrects numbers already reported and the padding does not.
+
+The operational rule stands and now has a second data point: **total concurrent
+containers, across every job, must stay at or below ~5.** Two jobs each
+individually within budget are not within budget together.
