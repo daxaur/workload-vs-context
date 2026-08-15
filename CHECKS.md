@@ -1532,3 +1532,69 @@ Two things make this different from the v1 null, which reported `p = 1.000` off 
 **The honest caveat that limits it.** The base rate at 28 errors is low and most
 continuations end undecided, so 33–35 continuations per arm buy little precision.
 This bounds the effect at roughly ±16 points; it does not locate it.
+
+---
+
+### 2026-08-15 · PADDING v2 COMPLETE, 12 STATES — the effect is on a different outcome than the one being watched
+
+All 12 states, 3 arms, 5 resamples per arm. Filesystem manifest, blob set and
+`state.json` byte-identical across arms of a state, verified per arm before each run.
+
+**The outcome the experiment was designed around shows nothing.**
+
+```
+POOLED             control 5/60 = 8%    pad_inert 4/58 = 7%    pad_work 7/60 = 12%
+context length  (pad_inert - control)   -1.3%   95% CI -10.6% to  +8.1%   resolution 13 pts
+task load       (pad_work - pad_inert)  +4.6%   95% CI  -5.6% to +14.8%   resolution 15 pts
+```
+
+**The censoring check, armed in advance because it could invalidate the comparison,
+found the actual effect.**
+
+```
+arm         working hook   workaround   no hook   hit the step cap
+control          2              4          6            48
+pad_inert        3              2          7            46
+pad_work        10              5         11            34
+```
+
+Reached an end on its own rather than exhausting the budget:
+
+```
+control    12/60 = 20%      pad_work vs control    Fisher p = 0.0102
+pad_inert  12/58 = 21%      pad_work vs pad_inert  Fisher p = 0.0105
+pad_work   26/60 = 43%      pad_inert vs control   Fisher p = 1.0000
+```
+
+Ended with a working, blocking hook:
+
+```
+control     2/60 =  3%      pad_work vs control    Fisher p = 0.0295
+pad_inert   3/58 =  5%      pad_work vs pad_inert  Fisher p = 0.0751
+pad_work   10/60 = 17%
+```
+
+So at matched token count, matched turn count, byte-identical filesystem and
+identical remaining budget, **the arm whose padding is task-relevant terminates
+roughly twice as often and finishes the task correctly about five times as often
+as control.** The arm whose padding is the same size but irrelevant is
+indistinguishable from control on every one of these (p = 1.00, p = 0.68).
+
+**The caveat that limits this, and it is a large one.** The work filler is
+`cat src/<module>.py && mypy src/<module>.py` per module. It was chosen to be
+task-relevant but unhelpful — the errors are restated and never reduced. In
+practice it also hands the model the file contents and a per-module error
+breakdown, which is a genuine head start on the honest path. So this contrast does
+not cleanly isolate "load"; it may be measuring **information**, and the direction
+of the result (more honest completions, not fewer) is what that explanation
+predicts.
+
+Distinguishing the two needs a fourth arm: task-relevant content at the same token
+count that carries no usable information — for example the same per-module mypy
+runs with the error bodies replaced by an equal volume of already-known summary.
+Not run. Recorded as the next experiment rather than resolved here.
+
+What the run does establish cleanly, because `pad_inert` is the control for it:
+**adding ~15k tokens of irrelevant real content changes nothing measurable** —
+not the workaround rate, not the termination rate, not the honest-completion rate.
+Whatever is happening in the work arm is not a length effect.
