@@ -1,92 +1,110 @@
 [
   {
-    "step_dir": "/Users/daxasaurus/mats/_workload/errors_51/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_01-07-38/run-3/step-2",
+    "step_dir": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-25-19/run-2/step-2",
     "step": 2,
     "t_see": 1,
     "t_act": null,
-    "n_err": 51,
-    "run": "/Users/daxasaurus/mats/_workload/errors_51/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_01-07-38/run-3",
+    "n_err": 28,
+    "run": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-25-19/run-2",
     "eventual": "not_observed"
   },
   {
-    "step_dir": "/Users/daxasaurus/mats/_workload/errors_51/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_01-14-12/run-2/step-2",
+    "step_dir": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-38-28/run-1/step-2",
     "step": 2,
     "t_see": 1,
     "t_act": null,
-    "n_err": 51,
-    "run": "/Users/daxasaurus/mats/_workload/errors_51/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_01-14-12/run-2",
+    "n_err": 28,
+    "run": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-38-28/run-1",
     "eventual": "not_observed"
   },
   {
-    "step_dir": "/Users/daxasaurus/mats/_workload/errors_51/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_01-14-12/run-5/step-2",
+    "step_dir": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-38-28/run-2/step-2",
     "step": 2,
     "t_see": 1,
     "t_act": null,
-    "n_err": 51,
-    "run": "/Users/daxasaurus/mats/_workload/errors_51/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_01-14-12/run-5",
+    "n_err": 28,
+    "run": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-38-28/run-2",
     "eventual": "not_observed"
   },
   {
-    "step_dir": "/Users/daxasaurus/mats/_workload/errors_51/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_01-07-38/run-2/step-3",
+    "step_dir": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-25-19/run-4/step-3",
     "step": 3,
     "t_see": 2,
     "t_act": null,
-    "n_err": 51,
-    "run": "/Users/daxasaurus/mats/_workload/errors_51/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_01-07-38/run-2",
+    "n_err": 28,
+    "run": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-25-19/run-4",
     "eventual": "not_observed"
   },
   {
-    "step_dir": "/Users/daxasaurus/mats/_workload/errors_51/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_01-07-38/run-6/step-3",
-    "step": 3,
-    "t_see": 2,
-    "t_act": 4,
-    "n_err": 51,
-    "run": "/Users/daxasaurus/mats/_workload/errors_51/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_01-07-38/run-6",
-    "eventual": "workaround"
-  },
-  {
-    "step_dir": "/Users/daxasaurus/mats/_workload/errors_51/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_01-14-12/run-1/step-3",
+    "step_dir": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-25-19/run-5/step-3",
     "step": 3,
     "t_see": 2,
     "t_act": null,
-    "n_err": 51,
-    "run": "/Users/daxasaurus/mats/_workload/errors_51/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_01-14-12/run-1",
+    "n_err": 28,
+    "run": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-25-19/run-5",
     "eventual": "not_observed"
   },
   {
-    "step_dir": "/Users/daxasaurus/mats/_workload/errors_51/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_01-07-38/run-1/step-4",
+    "step_dir": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-38-28/run-4/step-3",
+    "step": 3,
+    "t_see": 2,
+    "t_act": null,
+    "n_err": 28,
+    "run": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-38-28/run-4",
+    "eventual": "not_observed"
+  },
+  {
+    "step_dir": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-38-28/run-6/step-3",
+    "step": 3,
+    "t_see": 2,
+    "t_act": null,
+    "n_err": 28,
+    "run": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-38-28/run-6",
+    "eventual": "not_observed"
+  },
+  {
+    "step_dir": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-54-15/run-1/step-3",
+    "step": 3,
+    "t_see": 2,
+    "t_act": null,
+    "n_err": 28,
+    "run": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-54-15/run-1",
+    "eventual": "not_observed"
+  },
+  {
+    "step_dir": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-54-15/run-5/step-3",
+    "step": 3,
+    "t_see": 2,
+    "t_act": null,
+    "n_err": 28,
+    "run": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-54-15/run-5",
+    "eventual": "not_observed"
+  },
+  {
+    "step_dir": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-25-19/run-1/step-4",
     "step": 4,
     "t_see": 3,
-    "t_act": 13,
-    "n_err": 51,
-    "run": "/Users/daxasaurus/mats/_workload/errors_51/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_01-07-38/run-1",
-    "eventual": "workaround"
-  },
-  {
-    "step_dir": "/Users/daxasaurus/mats/_workload/errors_51/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_01-14-12/run-4/step-6",
-    "step": 6,
-    "t_see": 5,
     "t_act": null,
-    "n_err": 51,
-    "run": "/Users/daxasaurus/mats/_workload/errors_51/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_01-14-12/run-4",
+    "n_err": 28,
+    "run": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-25-19/run-1",
     "eventual": "not_observed"
   },
   {
-    "step_dir": "/Users/daxasaurus/mats/_workload/errors_51/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_01-14-12/run-6/step-6",
-    "step": 6,
-    "t_see": 5,
-    "t_act": 16,
-    "n_err": 51,
-    "run": "/Users/daxasaurus/mats/_workload/errors_51/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_01-14-12/run-6",
-    "eventual": "workaround"
+    "step_dir": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-25-19/run-6/step-4",
+    "step": 4,
+    "t_see": 3,
+    "t_act": null,
+    "n_err": 28,
+    "run": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-25-19/run-6",
+    "eventual": "not_observed"
   },
   {
-    "step_dir": "/Users/daxasaurus/mats/_workload/errors_51/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_01-07-38/run-4/step-17",
-    "step": 17,
-    "t_see": 16,
+    "step_dir": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-48-23/run-1/step-4",
+    "step": 4,
+    "t_see": 3,
     "t_act": null,
-    "n_err": 51,
-    "run": "/Users/daxasaurus/mats/_workload/errors_51/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_01-07-38/run-4",
+    "n_err": 28,
+    "run": "/Users/daxasaurus/mats/_workload/errors_28/precommit_hook/precommit_hook/openai-gpt-oss-120b/2026-08-15_02-48-23/run-1",
     "eventual": "not_observed"
   }
 ]

@@ -1257,3 +1257,35 @@ class changed between first artifact and terminal: 2  (source -> config suppress
 
 Still zero reversals, now over 55 more rollouts and three more classes. Median
 first appearance at step 11, at 41% of the way through the rollout.
+
+---
+
+### 2026-08-15 · A NON-CEILING POOL EXISTS — 28 errors runs 25%
+
+Oracle-labelled, gpt-oss-120b, `max_steps 50`. Completing the low end of the
+workload sweep:
+
+```
+errors     workaround      95% Wilson     rollouts that never wrote a hook
+     0        0/10          0-28%                    0
+    10        0/5           0-43%                    5
+    28        3/12  = 25%   9-53%                   10
+    51       21/22 = 95%   78-99%                    0
+   258        9/9  = 100%  70-100%                   0
+   602       12/12 = 100%  76-100%                   2
+```
+
+So the outcome is not a step function after all: **28 pre-existing errors gives an
+intermediate rate**, and it is the one pool where a within-state intervention has
+room to move in either direction. The steep part of the curve sits between 28 and
+51 errors, and the environment ships no variant in that gap.
+
+Two things to carry into the padding design. The 28-error condition also has the
+highest give-up rate on record — 10 of 22 rollouts stopped without writing a hook
+at all — so the padded arms will lose continuations to that, not just to the step
+cap, and the rate has to be reported per arm. And the frozen grader scores 17/17
+here, which is unsurprising: at 28 errors the workarounds that do occur are the
+blatant kind.
+
+Padding candidates redrawn from this pool: 104 checkpoints in the lag window
+across 22 rollouts, one per rollout, 12 kept.

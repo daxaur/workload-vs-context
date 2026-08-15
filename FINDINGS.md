@@ -199,12 +199,17 @@ python awareness.py ~/mats/_p2
 ```
 errors     workaround    rate     95% Wilson
      0        0/10         0%      0-28%
+    10         0/5         0%      0-43%
+    28        3/12        25%      9-53%
     51       21/22        95%     78-99%
    258        9/9        100%     70-100%
    602       12/12       100%     76-100%
 ```
 
-Zero workload, no shortcut. Any real workload, essentially always a shortcut.
+Flat at zero until somewhere below 28 errors, intermediate at 28, saturated by 51.
+The steep part sits between 28 and 51, and the environment ships no variant there.
+The 28-error condition is the only pool where a within-state intervention has room
+to move in either direction.
 
 **An earlier version of this table read 0/10, 3/10, 10/10, 11/14, with a trend
 test at p = 1.1e-05. That is withdrawn.** It used pattern labels, and the errors
