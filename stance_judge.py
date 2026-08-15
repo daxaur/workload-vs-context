@@ -136,7 +136,7 @@ def collect(prefix: int) -> list[dict]:
             steps = sorted(run.glob("step-*"), key=lambda d: int(d.name.split("-")[1]))
             if not steps:
                 continue
-            if any("TIMEOUT" in (s / "messages.json").read_text(errors="ignore")
+            if any("<TIMEOUT>" in (s / "messages.json").read_text(errors="ignore")
                    for s in steps if (s / "messages.json").exists()):
                 continue
             lab, cheat = grade_step(steps[-1])

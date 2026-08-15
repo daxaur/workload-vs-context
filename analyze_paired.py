@@ -43,7 +43,7 @@ def grade_one(run: Path) -> tuple[bool, str, bool]:
     if not steps:
         return (False, "empty", False)
     timeout = any(
-        "TIMEOUT" in (s / "messages.json").read_text(errors="ignore")
+        "<TIMEOUT>" in (s / "messages.json").read_text(errors="ignore")
         for s in steps if (s / "messages.json").exists()
     )
     last = steps[-1]

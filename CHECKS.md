@@ -1289,3 +1289,39 @@ blatant kind.
 
 Padding candidates redrawn from this pool: 104 checkpoints in the lag window
 across 22 rollouts, one per rollout, 12 kept.
+
+---
+
+### 2026-08-15 · THE CORRUPTION FILTER WOULD HAVE DELETED EXACTLY ONE ARM
+
+The padding monitor reported 80 corrupted rollouts. There were none. Every
+analysis in this repo drops a rollout whose transcript contains the string
+`TIMEOUT`, because the harness replaces a timed-out command's output with
+`<TIMEOUT>command</TIMEOUT>` (`tool_calling.py:192`). The filters matched the bare
+word.
+
+The inert padding arm is built by `cat`-ing third-party library sources, and
+`requests/adapters.py` contains:
+
+```python
+DEFAULT_POOL_TIMEOUT = None
+```
+
+So every inert continuation matched. Confirmed by checking for the real sentinel:
+**0 rollouts in `_p2` contain `<TIMEOUT>`.**
+
+**What this would have done if it had not been caught.** The filter fires only on
+the arm whose filler happens to contain the word — the inert arm. Control and work
+arms are untouched. So the analysis would have silently dropped one of the three
+arms of the experiment, and the remaining comparison would have looked perfectly
+healthy: a clean `control` vs `pad_work` table with no missing-data warning, and
+the contrast that isolates context length simply absent.
+
+Fixed in all ten analysis scripts: match `"<TIMEOUT>"`, not `"TIMEOUT"`. No
+previously reported number is affected — the collision only exists in `_p2`, which
+had not been analysed yet.
+
+The general hazard is worth stating: **an intervention that injects real file
+contents into a transcript can collide with any sentinel the harness uses in that
+same transcript.** Filler that is real is more defensible than filler that is
+fabricated, and it carries this cost.

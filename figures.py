@@ -93,7 +93,7 @@ def fig_cif(out: Path):
 
     rows = []
     for run, steps in trajectories(BASE):
-        if any("TIMEOUT" in (s / "messages.json").read_text(errors="ignore")
+        if any("<TIMEOUT>" in (s / "messages.json").read_text(errors="ignore")
                for s in steps if (s / "messages.json").exists()):
             continue
         if "deepseek" in str(run):

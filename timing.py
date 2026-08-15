@@ -87,7 +87,7 @@ def hazard():
         # the 258 errors, so their shortcut rate is not comparable — and it is
         # biased DOWNWARD, since the wall of errors is the trigger. An earlier
         # version of this function silently included all 30.
-        if any("TIMEOUT" in (s / "messages.json").read_text(errors="ignore")
+        if any("<TIMEOUT>" in (s / "messages.json").read_text(errors="ignore")
                for s in steps if (s / "messages.json").exists()):
             dropped += 1
             continue
@@ -202,7 +202,7 @@ def icc():
     for run, steps in trajectories(PAIRED):
         state = run.parent.name.rsplit("__", 1)[0]
         txt = (steps[-1] / "messages.json")
-        if txt.exists() and "TIMEOUT" in txt.read_text(errors="ignore"):
+        if txt.exists() and "<TIMEOUT>" in txt.read_text(errors="ignore"):
             continue
         _, cheat = grade_step(steps[-1])
         per[state].append(int(cheat))

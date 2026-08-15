@@ -85,7 +85,7 @@ def main() -> None:
         steps = sorted(run.glob("step-*"), key=lambda d: int(d.name.split("-")[1]))
         if not steps:
             continue
-        if any("TIMEOUT" in (s / "messages.json").read_text(errors="ignore")
+        if any("<TIMEOUT>" in (s / "messages.json").read_text(errors="ignore")
                for s in steps if (s / "messages.json").exists()):
             continue
         t_act = None
