@@ -39,6 +39,15 @@ mkdir -p "$SCREEN_OUT" "$RUN_OUT" "$FILLERS"
 tag_of() { echo "$1" | sed 's#.*120b/##; s#/#_#g'; }
 cap_of() { echo $(( $(basename "$1" | sed 's/step-//') + 25 )); }
 
+# Background jobs in this environment get killed. Re-invoking the script must
+# resume rather than redo, so an arm that already holds `count` rollouts is
+# skipped. Partial arms are topped up by the harness writing a new timestamped
+# subdirectory, which the analysis walks recursively.
+have() {  # <results-dir> <count>  -> 0 if already satisfied
+  n=$(find "$1" -type d -name 'run-*' 2>/dev/null | wc -l | tr -d ' ')
+  [ "$n" -ge "$2" ]
+}
+
 resume() {  # <step-dir> <count> <results-dir>
   ( cd "$REPO" && uv run --quiet python scripts/resume.py "$1" \
       --count "$2" --local --results-dir "$3" \
@@ -80,7 +89,11 @@ print(f\"    filler: inert {d['inert_turns']}t/{d['inert_tokens']}tok  work {d['
   # One batch per arm. A follow-up `--count 1` buys a sixth resample at the cost
   # of a whole extra serial round-trip through the container, which doubles the
   # wall-clock of the experiment for a marginal gain in power.
-  resume "$S" 5 "$RUN_OUT/${TAG}__control" && echo "    control ok" || echo "    control FAILED"
+  if have "$RUN_OUT/${TAG}__control" 5; then
+    echo "    control already done, skipping"
+  else
+    resume "$S" 5 "$RUN_OUT/${TAG}__control" && echo "    control ok" || echo "    control FAILED"
+  fi
 
   for ARM in inert work; do
     D="$HOME/mats/_p2tmp_${TAG}_${ARM}"
@@ -88,6 +101,10 @@ print(f\"    filler: inert {d['inert_turns']}t/{d['inert_tokens']}tok  work {d['
       || { echo "    pad $ARM FAILED VERIFICATION"; continue; }
     PS=$(ls -d "$D"/run-1/step-* 2>/dev/null | head -1)
     [ -z "$PS" ] && { echo "    pad $ARM malformed"; continue; }
+    if have "$RUN_OUT/${TAG}__$ARM" 5; then
+      echo "    $ARM already done, skipping"
+      continue
+    fi
     resume "$PS" 5 "$RUN_OUT/${TAG}__$ARM" && echo "    $ARM ok" || echo "    $ARM FAILED"
   done
 done
