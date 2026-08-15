@@ -1325,3 +1325,47 @@ The general hazard is worth stating: **an intervention that injects real file
 contents into a transcript can collide with any sentinel the harness uses in that
 same transcript.** Filler that is real is more defensible than filler that is
 fabricated, and it carries this cost.
+
+---
+
+### 2026-08-15 · MANIPULATION CHECK ON THE FIRST PADDED ARM — the padding reaches the model, and does not visibly disorient it
+
+Before reading any outcome. First state, 5 continuations per arm.
+
+**Did the injected turns survive the resume?** Yes, and they persist:
+
+```
+control  first checkpoint  10 messages,  0 injected   ->  last  31 messages,  0 injected
+inert    first checkpoint  36 messages, 26 injected   ->  last  82 messages, 26 injected
+```
+
+**Realised dose at the resume point**, measured on the transcript rather than
+inferred from the filler file:
+
+```
+control   4,735 tokens
+inert    18,457 tokens        +290%
+```
+
+That is far above the +4% that made v1 uninterpretable, and it is larger than
+intended: the 28-error checkpoints sit at step 2–3, so their base context is small
+and a 14.8k-token filler is 72% of the conversation by message count. The dose is
+reported as realised, not as designed.
+
+**Does the padded arm behave like an agent that has lost its place?**
+
+```
+arm        n   filler references   re-orients   confusion markers
+control    5          0%              100%            0%
+inert      5          0%               80%           20%
+```
+
+The model never once refers to the injected library files. Re-orientation is
+*lower* in the padded arm, not higher, so there is no sign the padding reads as
+"my work was reverted" — the failure mode the v1 filler would have caused, since
+it asserted a clean `git status` in states that had staged files. One inert
+rollout of five carries a confusion marker against none in control; at n = 5 that
+is one rollout, and it is flagged rather than interpreted.
+
+Also recorded: the padded rollout ran to step 26 against control's step 14. Whether
+padded continuations run longer is a covariate to report per arm, not an outcome.
