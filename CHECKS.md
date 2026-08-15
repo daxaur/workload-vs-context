@@ -1666,3 +1666,44 @@ should be described as **information that advances the task**, not as load.
 *understate* work's advantage if volume mattered, which is the direction that makes
 the comparison conservative. The workaround-rate outcome remains flat across all
 four arms and is not what moved.
+
+**Final, all 12 states.** The interim above was at 11; the twelfth state changed one
+of the two measures and it is reported rather than dropped.
+
+```
+arm         n   working hook   workaround   no hook   hit the cap
+control    60        2             4           6          48
+inert      58        3             2           7          46
+work       60       10             5          11          34
+repeat     60        2             4          11          43
+```
+
+**Ended with a working, blocking hook** — the clean contrast:
+
+```
+control    2/60 =  3%      inert vs control    p = 0.6767
+inert      3/58 =  5%      repeat vs control   p = 1.0000
+work      10/60 = 17%      work vs control     p = 0.0295
+repeat     2/60 =  3%      work vs repeat      p = 0.0295
+```
+
+**Ended on its own rather than exhausting the budget** — same ordering, weaker:
+
+```
+control   12/60 = 20%      inert vs control    p = 1.0000
+inert     12/58 = 21%      repeat vs control   p = 0.3940
+work      26/60 = 43%      work vs control     p = 0.0102
+repeat    17/60 = 28%      work vs repeat      p = 0.1273
+```
+
+At 11 states `work vs repeat` on this second measure was p = 0.0456; with the
+twelfth it is p = 0.1273. **It no longer separates.** The first measure does, and
+that is the one to quote.
+
+**Multiplicity.** Eight Fisher tests are reported above and no correction is
+applied. Against a Bonferroni threshold of 0.05/8 = 0.006, only `work vs control`
+on the termination measure (p = 0.0102) comes close, and none clears it. The two
+p = 0.0295 results are **marginal**, and the reason to take them seriously is not
+the p-value but the pattern: the two arms matched to `work` on volume — one on
+relevance too — both sit exactly on control (p = 1.0000, p = 0.6767), and only the
+informative arm moves. A single test cannot carry that; the design does.
