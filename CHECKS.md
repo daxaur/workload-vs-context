@@ -1466,3 +1466,20 @@ Continuations that never reached an outcome: 70% control, 80% pad_inert, 67%
 pad_work. Comparable, so the binary outcome is not distorted by differential
 censoring at this sample. That check is the one that would have invalidated the
 comparison outright, and it passes.
+
+---
+
+### 2026-08-15 · ONE CORRUPTED CONTINUATION, HANDLED BY THE PIPELINE
+
+The watch fired on the real `<TIMEOUT>` sentinel this time: 7 files, all belonging
+to a **single** continuation (`..._run-5_step-3__inert/run-3`), not a batch. Cause
+is the usual one — a relaunch overlapping the tail of the previous pass, briefly
+pushing concurrent containers above the safe ~5.
+
+No intervention needed. `analyze_pad2.py` drops any continuation containing the
+sentinel and prints the count on its first line, so that arm reports 4 usable
+rollouts instead of 5 and says so. The failure is loud in the output rather than
+silent in the labels, which is the whole reason the drop-and-report exists.
+
+Watch re-armed with a threshold of more than three affected continuations, so a
+single stray does not stop a run that the analysis already handles correctly.
