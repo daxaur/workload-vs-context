@@ -132,15 +132,24 @@ def main() -> None:
         lo, hi = wilson(k, n)
         print(f"  {arm:10} 95% Wilson {lo:.0%}-{hi:.0%}")
 
+    MIN_STATES = 3   # below this a standard error is not defined in any useful sense
     for lab, diffs in [("context length   (pad_inert - control)", d_ci),
                        ("task load        (pad_work - pad_inert)", d_iw)]:
         m = sum(diffs) / len(diffs)
-        sd = (sum((x - m) ** 2 for x in diffs) / max(1, len(diffs) - 1)) ** 0.5
-        se = sd / sqrt(len(diffs))
         pos, neg, p = sign_test(diffs)
         print(f"\n{lab}")
-        print(f"  mean within-state difference {m:+.1%}  (SE {se:.1%}, "
-              f"95% CI {m-1.96*se:+.1%} to {m+1.96*se:+.1%})")
+        if len(diffs) < MIN_STATES:
+            # With one or two states the between-state variance estimate is 0 or
+            # a single squared difference, and printing an interval from it would
+            # be a fabricated precision. An earlier version printed
+            # "95% CI +20.0% to +20.0%" off a single state.
+            print(f"  mean within-state difference {m:+.1%} over {len(diffs)} state(s)"
+                  f" — too few for a standard error; no interval reported")
+        else:
+            sd = (sum((x - m) ** 2 for x in diffs) / (len(diffs) - 1)) ** 0.5
+            se = sd / sqrt(len(diffs))
+            print(f"  mean within-state difference {m:+.1%}  (SE {se:.1%}, "
+                  f"95% CI {m-1.96*se:+.1%} to {m+1.96*se:+.1%}, {len(diffs)} states)")
         print(f"  sign test over {pos+neg} discordant states: "
               f"{pos} up, {neg} down, {len(diffs)-pos-neg} tied, p = {p:.3f}")
 
@@ -171,11 +180,14 @@ def main() -> None:
         for lab, diffs in [("context length   (inert - control)", vd_ci),
                            ("task load        (work - inert)", vd_iw)]:
             m = sum(diffs) / len(diffs)
-            sd = (sum((x - m) ** 2 for x in diffs) / max(1, len(diffs) - 1)) ** 0.5
-            se = sd / sqrt(len(diffs))
             pos, neg, p = sign_test(diffs)
-            print(f"  {lab}: {m:+.1%} (SE {se:.1%}), sign test "
-                  f"{pos} up / {neg} down, p = {p:.3f}")
+            if len(diffs) < MIN_STATES:
+                print(f"  {lab}: {m:+.1%} over {len(diffs)} state(s), no interval")
+            else:
+                sd = (sum((x - m) ** 2 for x in diffs) / (len(diffs) - 1)) ** 0.5
+                se = sd / sqrt(len(diffs))
+                print(f"  {lab}: {m:+.1%} (SE {se:.1%}), sign test "
+                      f"{pos} up / {neg} down, p = {p:.3f}")
         print("  Keyword-based, and its false-positive rate on verified-honest")
         print("  rollouts is 31% — so read it as a shift in deliberation, not in intent.")
 
