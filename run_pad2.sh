@@ -47,6 +47,12 @@ cap_of() { echo $(( $(basename "$1" | sed 's/step-//') + 25 )); }
 # resume rather than redo, so an arm that already holds `count` rollouts is
 # skipped. Partial arms are topped up by the harness writing a new timestamped
 # subdirectory, which the analysis walks recursively.
+# TARGET_N continuations per arm. Started at 5; raised to 10 on 2026-08-15 because
+# the four-arm result rested on 2-10 events per cell, which is too few to carry a
+# marginal p-value. Re-invoking with a higher TARGET_N tops up every arm rather
+# than redoing it.
+TARGET_N=${TARGET_N:-5}
+
 have() {  # <results-dir> <count>  -> 0 if already satisfied
   n=$(find "$1" -type d -name 'run-*' 2>/dev/null | wc -l | tr -d ' ')
   [ "$n" -ge "$2" ]
@@ -93,19 +99,19 @@ print(f\"    filler: inert {d['inert_turns']}t/{d['inert_tokens']}tok  work {d['
   # One batch per arm. A follow-up `--count 1` buys a sixth resample at the cost
   # of a whole extra serial round-trip through the container, which doubles the
   # wall-clock of the experiment for a marginal gain in power.
-  if have "$RUN_OUT/${TAG}__control" 5; then
+  if have "$RUN_OUT/${TAG}__control" "$TARGET_N"; then
     echo "    control already done, skipping"
   else
     resume "$S" 5 "$RUN_OUT/${TAG}__control" && echo "    control ok" || echo "    control FAILED"
   fi
 
-  for ARM in inert work repeat; do
+  for ARM in ${ARMS:-inert work repeat}; do
     D="$HOME/mats/_p2tmp_${TAG}_${ARM}"
     $PY "$WORK/pad2.py" "$S" --filler "$F" --arm "$ARM" --out "$D" >/dev/null 2>&1 \
       || { echo "    pad $ARM FAILED VERIFICATION"; continue; }
     PS=$(ls -d "$D"/run-1/step-* 2>/dev/null | head -1)
     [ -z "$PS" ] && { echo "    pad $ARM malformed"; continue; }
-    if have "$RUN_OUT/${TAG}__$ARM" 5; then
+    if have "$RUN_OUT/${TAG}__$ARM" "$TARGET_N"; then
       echo "    $ARM already done, skipping"
       continue
     fi
