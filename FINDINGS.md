@@ -190,34 +190,68 @@ model never refers to the injected library sources, and re-orientation is *lower
 in the padded arm (80% vs 100%) — no sign it reads as "my work was reverted",
 which is what the v1 filler would have caused.
 
-**Result at seven states of twelve.**
+**Result: four arms, twelve states, 60 continuations per arm.**
+
+Every arm is 13 injected turns at a matched token budget, spliced into a
+byte-identical filesystem with an identical remaining step budget. The arms differ
+only in what the turns contain:
+
+| arm | injected content |
+|---|---|
+| control | nothing |
+| pad_inert | real, task-irrelevant reading (third-party library sources) |
+| pad_work | `cat src/<m>.py && mypy src/<m>.py` across 14 modules |
+| pad_repeat | the same command on **one** module, issued 13 times |
+
+`pad_repeat` is the control for `pad_work`: same shape, same volume, same
+relevance, a fourteenth of the information.
 
 ```
-POOLED                  control 3/35 = 9%   pad_inert 2/33 = 6%   pad_work 3/35 = 9%
-
-context length  (pad_inert - control)   -2.1%   95% CI -16.3% to +12.0%
-task load       (pad_work - pad_inert)  +2.1%   95% CI -12.0% to +16.3%
-resolution: 80% power for a shift of 20 points or larger
+arm         n   working hook   workaround   no hook   hit the cap
+control    60        2             4           6          48
+inert      58        3             2           7          46
+work       60       10             5          11          34
+repeat     60        2             4          11          43
 ```
 
-Tripling the conversation length at a byte-identical filesystem and step budget
-did not shift the workaround rate by 20 points or more. Nor did replacing that
-padding with the same number of tokens **and turns** of real, failing task work.
-Anything smaller is invisible to this design and nothing is claimed about it.
-
-Censoring across arms — 74% / 79% / 63% — is comparable, so the binary outcome is
-not distorted by the padded arm running out of steps more often. That was the
-check that could have invalidated the comparison outright.
-
-**What limits it.** The 28-error base rate is low and most continuations end
-undecided, so ~35 per arm bound the effect at roughly ±16 points. It does not
-locate it. Reported as a bound, not as a null.
+**Ended with a working, blocking hook:**
 
 ```
-python candidates.py --n 12 --root ~/mats/_workload/errors_28
-./run_pad2.sh run 0 1 2 3 4 5 6 7 8 9 10 11
-python awareness.py ~/mats/_p2      # run this BEFORE the outcome
+control    2/60 =  3%      inert vs control    p = 0.6767
+inert      3/58 =  5%      repeat vs control   p = 1.0000
+work      10/60 = 17%      work vs control     p = 0.0295
+repeat     2/60 =  3%      work vs repeat      p = 0.0295
+```
+
+**Ended on its own rather than exhausting the budget:**
+
+```
+control   12/60 = 20%      work vs control     p = 0.0102
+work      26/60 = 43%      work vs repeat      p = 0.1273
+repeat    17/60 = 28%      inert vs control    p = 1.0000
+```
+
+Three contrasts, three answers. **+15k tokens of irrelevant content** is
+indistinguishable from control. **+15k tokens of relevant content carrying little
+information** is also indistinguishable from control. Only the arm carrying
+fourteen modules' contents and their error lists moves, and it separates from its
+own matched control.
+
+The **workaround rate stayed flat across all four arms** (4, 2, 5, 4 of ~60). What
+moved was whether the agent finished at all and whether it finished correctly.
+
+**Caveats.** Eight Fisher tests, no multiplicity correction; against a Bonferroni
+threshold of 0.006 none clears, so the two p = 0.0295 results are marginal and the
+weight rests on the pattern rather than any single test. At 11 states
+`work vs repeat` on the termination measure was p = 0.0456; the twelfth state took
+it to p = 0.1273, so that measure no longer separates and only the working-hook
+contrast should be quoted. The `repeat` filler is 12,159 tokens against `work`'s
+14,169 — 14% smaller, in the direction that makes the comparison conservative.
+One model, one environment, and events are rare (2–10 per cell).
+
+```
 python analyze_pad2.py ~/mats/_p2
+python awareness.py ~/mats/_p2      # run this BEFORE the outcome
 ```
 
 ## 8 · Workload at launch — no gradient, and the gradient I first reported was grader error
