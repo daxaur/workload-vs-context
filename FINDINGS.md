@@ -224,27 +224,40 @@ annotations properly."*
 
 So the deliberation is close to universal and the **stance** is what varies.
 
-## 10 · Is the stance legible? — inconclusive, and the pooled version is a trap
+## 10 · Is the stance legible? — pooled it looks strong, matched it is nothing
 
 Two judges from different families, given the first 8,000 characters of reasoning
 and nothing else, asked for ADOPT / REJECT / UNCLEAR. Both classes drawn from
 gpt-oss-120b so a judge cannot score by writing style.
 
+**Pooled over all conditions (n = 79):**
+
 ```
                               sensitivity      specificity
-qwen3-235b-a22b-2507           31/53 = 58%      13/14 = 93%
-gemini-2.5-flash-lite          47/53 = 89%      10/14 = 71%
-judges agree with each other   43/67 = 64%
+qwen3-235b-a22b-2507           34/63 = 54%      13/16 = 81%
+gemini-2.5-flash-lite          57/63 = 90%      10/16 = 62%
+judges agree with each other   48/79 = 61%
 ```
 
-**Not a result.** 10 of 14 negatives come from the 0-error condition, where the
-task is trivial — the classes are separable on difficulty alone. The only
-difficulty-matched slice is the 51-error condition, n = 3 per class, and the two
-judges point opposite ways there. More 51-error rollouts are being collected into
-their own directory rather than appended to the dose-response table.
+**Matched on task difficulty — the 51-error condition, the only one holding both
+classes (n = 18, 13 workaround / 5 honest):**
 
-What it does establish: the judges disagree with each other on 36% of rollouts,
-so "the stance is legible in the reasoning" is not safe to assume.
+```
+   baseline "always ADOPT"   accuracy 72%
+qwen3-235b     TP 3  FN 10  FP 2  TN 3   accuracy 33%   Fisher p = 0.583
+gemini-flash   TP 11 FN  2  FP 5  TN 0   accuracy 61%   Fisher p = 1.000
+```
+
+Neither judge beats the majority-class baseline; neither 2x2 shows any
+association. gemini answers ADOPT on 16 of 18, which is how it earned 90%
+sensitivity in the pooled table.
+
+At matched difficulty this design detects **no** ability to predict the action
+from a fixed prefix of the reasoning. With 5 negatives it has power only for a
+very large effect, so it rules out a strong signal, not a weak one.
+
+The gap between the two tables is the point: the pooled numbers are the ones a
+write-up would naturally report, and they are the confound.
 
 ---
 
