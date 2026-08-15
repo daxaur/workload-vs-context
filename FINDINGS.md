@@ -169,26 +169,42 @@ about the agent's own workspace.
 ICC of the outcome across the 8 paired states: **0.68**, with 6 of 8 giving the
 same result in all 10 continuations.
 
-## 7 · Padding v2 — what changed and why
+## 7 · Padding v2 — design, manipulation check, and an honest forecast
 
 | | v1 | v2 |
 |---|---|---|
-| dose | 578 tokens (4%) | ~21,000 tokens, matched on **turn count** too |
-| filler | hand-written, false in half the states | **real commands run on that checkpoint's real workspace** |
-| arms | control, padded | control, **pad_inert**, **pad_work** |
-| states | steps 6–15 (mostly decided) | inside the 6-step lag window, screened to 2 ≤ k ≤ 4 of 6 |
-| budget | `step + 14` | `step + 40` |
-| manipulation check | none | filler-reference and re-orientation grep across arms |
+| dose | 578 tokens (+4%) | **+290% measured on the transcript** |
+| filler | hand-written, false about the workspace in half the states | **real commands run on that checkpoint's own rebuilt workspace** |
+| arms | control, padded | control, **pad_inert**, **pad_work** (tokens *and* turns matched) |
+| states | steps 6–15, mostly already decided | 28-error pool, inside the lag window |
+| budget | `step + 14` | `step + 25` |
+| manipulation check | none | filler references, re-orientation, confusion, per arm |
 
 `pad_inert` vs control is context length at fixed workload. `pad_work` vs
-`pad_inert` is task load at matched context length and matched turn count. The
-screening rule and the budget were fixed before any screening data existed.
+`pad_inert` is task load at matched context length *and* matched turn count.
+
+**Manipulation check, run before any outcome.** The injected turns survive the
+resume and persist: 26 messages present in both the first and last checkpoint of
+the padded arm, none in control. Context at resume 4,735 vs 18,457 tokens. The
+model never refers to the injected library sources, and re-orientation is *lower*
+in the padded arm (80% vs 100%) — no sign it reads as "my work was reverted",
+which is what the v1 filler would have caused.
+
+**The forecast, stated before the data.** The 28-error pool is the only one not at
+a ceiling, but it buys that at the cost of censoring: workarounds appear by step
+18 while honest finishes need step 36+, so a `step + 25` continuation mostly ends
+undecided. With a 25% base rate and 5 resamples per arm this arm will be
+underpowered whatever it returns, and it is reported that way rather than as a
+null. The quantity that decides whether it is interpretable at all is
+**differential censoring** — printed per arm above the results table, because if
+the padded arm runs out of steps more often then a lower rate there means "had
+less time to decide", not "was less inclined to".
 
 ```
-python candidates.py --n 16
-./run_pad2.sh screen ; python screen_report.py ~/mats/_screen
-./run_pad2.sh run <survivor indices>
-python awareness.py ~/mats/_p2
+python candidates.py --n 12 --root ~/mats/_workload/errors_28
+./run_pad2.sh run 0 1 2 3 4 5 6 7 8 9 10 11
+python awareness.py ~/mats/_p2      # run this BEFORE the outcome
+python analyze_pad2.py ~/mats/_p2
 ```
 
 ## 8 · Workload at launch — no gradient, and the gradient I first reported was grader error
