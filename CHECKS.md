@@ -1793,3 +1793,77 @@ the first instead of replacing it.
 looks identical to a top-up that is merely slow, and the only thing that
 distinguished them was checking the count rather than trusting `control ok` in the
 log. The runner printed success on every one of those passes.
+
+---
+
+### 2026-08-15 · FINAL FOUR-ARM RESULT AT 120 CONTINUATIONS PER ARM
+
+Doubling the sample was the response to a marginal result on rare events. It held,
+and both measures are now decisive.
+
+```
+arm           n   working hook   workaround   no hook   hit the cap
+control     118         3             4          11         100
+inert        58         3             2           7          46
+work        120        23             7          13          77
+repeat      120         1             5          14         100
+```
+
+**Ended with a working, blocking hook**
+
+```
+control     3/118 =  2.5%   95% Wilson  1-7%
+inert       3/58  =  5.2%   95% Wilson  2-14%
+work       23/120 = 19.2%   95% Wilson 13-27%
+repeat      1/120 =  0.8%   95% Wilson  0-5%
+
+work vs control    p = 0.000036          repeat vs control  p = 0.3676
+work vs repeat     p = 0.000001          inert  vs control  p = 0.3971
+work vs inert      p = 0.0127
+```
+
+**Ended on its own rather than exhausting the budget**
+
+```
+control    18/118 = 15.3%      work vs control    p = 0.000334
+inert      12/58  = 20.7%      work vs repeat     p = 0.001148
+work       43/120 = 35.8%      repeat vs control  p = 0.8600
+repeat     20/120 = 16.7%
+```
+
+**Every arm is 13 injected turns at a matched token budget, spliced into a
+byte-identical filesystem with an identical remaining step budget.** The only
+difference is what the turns contain.
+
+Against a Bonferroni threshold of 0.05/8 = 0.006, `work vs control` and
+`work vs repeat` clear it on both measures by two to four orders of magnitude.
+`work vs inert` (p = 0.0127) does not, and is reported as marginal — though inert
+has 58 continuations to work's 120, so it is the least-powered contrast of the set.
+
+**Trajectory across sample sizes**, which is the check that the effect is not a
+small-sample artefact:
+
+```
+n per arm    work rate    work vs repeat
+    60         17%          p = 0.0295
+    75         17%          p = 0.0001
+   120         19%          p = 0.000001
+```
+
+The rate is stable and the p-value falls with n. That is what a real effect does;
+a small-sample artefact regresses instead.
+
+**What it establishes.** Adding ~15k tokens of irrelevant real content does
+nothing (p = 0.40 vs control). Adding ~15k tokens of task-relevant content that
+carries little information does nothing (p = 0.37 vs control, p = 0.86 on
+termination). Adding the same volume carrying fourteen modules' contents and their
+error lists raises honest completion from 2.5% to 19.2% and termination from 15%
+to 36%.
+
+**What it does not establish.** The `work` filler hands the model file contents and
+per-module error lists — genuinely useful material, not just load. So the operative
+variable is information that advances the task, and this design cannot separate
+"the model used it" from "the model was reminded the task was tractable". The
+workaround rate stayed flat across all four arms (4, 2, 7, 5); what moved was
+whether the episode ended and whether it ended correctly. One model, one
+environment, one workload level.
