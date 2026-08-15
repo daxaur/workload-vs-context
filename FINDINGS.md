@@ -272,6 +272,28 @@ so 13 times out of 13, which is the opposite ceiling.
 
 ---
 
+## Where the original question ended up
+
+The question was whether an agent shortcuts because of **workload** or because of
+**context length**. Two things measured here say it cannot be answered in this
+environment with these models.
+
+**The variables are mechanically coupled.** The error list is what fills the
+context, so at a fixed step number the 602-error condition already carries 9x the
+context of the 0-error one. No observational comparison can separate them, which
+is why an intervention was necessary.
+
+**Every pool is at a ceiling.** Oracle-labelled: gpt-oss-120b is 0/10 at 0 errors
+and 21/22, 9/9, 12/12 at 51, 258 and 602; deepseek-v4-pro is 0/13. A within-state
+intervention cannot move an outcome that is already 0 or 1 in every arm. `src_10`
+and `src_28` are being probed for an intermediate rate.
+
+That is a real answer to give someone else attempting the same open problem: the
+binding constraint is not the intervention, it is finding a model and a workload
+where the outcome is not already decided.
+
+---
+
 ## Still open
 
 - Hand-labels for the 11 workarounds (`report.html` → `OBSERVATIONS.md`) and for
