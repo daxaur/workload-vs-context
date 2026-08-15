@@ -152,6 +152,15 @@ def main() -> None:
                   f"95% CI {m-1.96*se:+.1%} to {m+1.96*se:+.1%}, {len(diffs)} states)")
         print(f"  sign test over {pos+neg} discordant states: "
               f"{pos} up, {neg} down, {len(diffs)-pos-neg} tied, p = {p:.3f}")
+        if len(diffs) >= MIN_STATES:
+            # What this design could actually have found, from the observed
+            # spread rather than an assumed one. Reported alongside the estimate
+            # so a null is never read as "no effect" when it means "no
+            # resolution". 2.8 = z(0.975) + z(0.80).
+            sd = (sum((x - m) ** 2 for x in diffs) / (len(diffs) - 1)) ** 0.5
+            mdd = 2.8 * sd / sqrt(len(diffs))
+            print(f"  resolution: at {len(diffs)} states this design has 80% power for a "
+                  f"shift of {mdd:.0%} or larger. Smaller shifts are not detectable here.")
 
     # --- second outcome: does the model voice the shortcut after the resume ---
     vu = {s: v for s, v in voiced.items() if all(v.get(x) for x in ARMS)}
