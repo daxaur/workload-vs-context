@@ -1439,3 +1439,30 @@ Consequences, recorded now rather than after seeing the result:
   artifact** with the undecided continuations censored, not a rate
 * `analyze_pad2.py` now refuses to print a standard error below three states — an
   earlier version reported "95% CI +20.0% to +20.0%" off a single state
+
+---
+
+### 2026-08-15 · PADDING v2, INTERIM AT THREE STATES
+
+```
+state                     control    pad_inert    pad_work
+02-25-19 run-2              0/5         0/5          1/5
+02-38-28 run-1              2/5         0/5          1/5
+02-38-28 run-2              1/5         1/5          0/5
+POOLED                     3/15=20%    1/15=7%      2/15=13%
+
+context length  (pad_inert - control)   -13.3%   95% CI -39.5% to +12.8%
+task load       (pad_work - pad_inert)   +6.7%   95% CI -19.5% to +32.8%
+```
+
+Both intervals contain zero and both are far too wide to exclude anything a
+reader would care about. **That was the forecast before the first continuation
+ran** — a 25% base rate with 5 resamples per arm cannot resolve less than about a
+30-point shift — and it is recorded as underpowered rather than presented as a
+null. The contrast with v1 is the point: v1 reported `p = 1.000` as though it
+meant something, when its dose was 4% and half its continuations were truncated.
+
+Continuations that never reached an outcome: 70% control, 80% pad_inert, 67%
+pad_work. Comparable, so the binary outcome is not distorted by differential
+censoring at this sample. That check is the one that would have invalidated the
+comparison outright, and it passes.
