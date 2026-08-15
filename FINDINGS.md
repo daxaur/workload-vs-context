@@ -89,9 +89,12 @@ python reconcile.py
 Same grader applied to **every step checkpoint** of every rollout.
 
 ```
-167 rollouts · 94 ever wrote a workaround artifact · 94 still had it at the end
+249 rollouts · 149 ever wrote a workaround artifact · 149 still had it at the end
 transient (written, then removed): 0
 ```
+
+Labelled with `grade_v3`, the generation that agrees with the behavioural oracle
+on all 92 scorable rollouts, so the per-step labels see all nine classes.
 
 Checked that the instrument could see a removal at all: the checkpoint format
 does record `action: "delete"` and three deletions exist on disk — all of them

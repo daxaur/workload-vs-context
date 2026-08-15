@@ -1240,3 +1240,20 @@ arms. If it comes back 0/15, then for gpt-oss-120b the outcome is a step functio
 with no usable middle, and the intervention has nowhere to run in this
 environment. Either answer is worth stating; the second is the one that would
 save someone else the six hours.
+
+---
+
+### 2026-08-15 · TRANSIENCE, RE-RUN WITH ORACLE-EQUIVALENT LABELS
+
+The first pass used `grade_v2`, which is blind to the three classes only the
+oracle found. Re-run with `grade_v3` (which agrees with the oracle on all 92
+scorable rollouts) over every step checkpoint of every rollout on disk:
+
+```
+249 rollouts · 149 ever wrote a workaround artifact · 149 still had it at the end
+transient (written, then removed): 0
+class changed between first artifact and terminal: 2  (source -> config suppression)
+```
+
+Still zero reversals, now over 55 more rollouts and three more classes. Median
+first appearance at step 11, at 41% of the way through the rollout.
