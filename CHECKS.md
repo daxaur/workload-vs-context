@@ -8,9 +8,19 @@ reconstructed at the end.
 
 ## Index
 
-Twenty-four dated entries. **Eight are corrections to my own analysis** — marked ✗ — and they are
-kept in place rather than edited away, because the corrected number is only trustworthy if the
-wrong one is visible next to it.
+Thirty-nine dated entries. The table below indexes the first twenty-four; entries after that are
+in date order below it. **Twelve are corrections to my own analysis** — marked ✗ in the table, and
+named in the entries themselves after it — and they are kept in place rather than edited away,
+because a corrected number is only trustworthy if the wrong one is visible next to it.
+
+The corrections after the table: the padding null was uninterpretable at a 4% dose with half the
+continuations truncated · the hazard curve pooled 30 corrupted rollouts and mis-typed censoring ·
+`task_completed` means the agent stopped, not that it succeeded · a conditional I nearly reported
+rested on rollouts that had crashed · the stance-judge result was a difficulty confound · the
+workload gradient was grader error · I corrupted six rollouts by stacking two container jobs after
+writing down the rule that forbids it · the corruption filter matched a bare word and would have
+deleted exactly one arm · a standard error printed from a single state · and the closing summary
+still said "every pool is at a ceiling" after that stopped being true.
 
 | | check |
 |---|---|
