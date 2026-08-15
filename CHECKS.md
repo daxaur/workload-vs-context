@@ -1598,3 +1598,71 @@ What the run does establish cleanly, because `pad_inert` is the control for it:
 **adding ~15k tokens of irrelevant real content changes nothing measurable** —
 not the workaround rate, not the termination rate, not the honest-completion rate.
 Whatever is happening in the work arm is not a length effect.
+
+---
+
+### 2026-08-15 · THE FOURTH ARM — the effect tracks information, not volume or length
+
+Eleven states carry all four arms. Every arm is 13 injected turns at a matched
+token budget, spliced into a byte-identical filesystem with an identical remaining
+step budget. The arms differ only in what the injected turns contain:
+
+```
+control    nothing injected
+inert      13 turns of real, task-irrelevant reading (third-party library sources)
+work       13 turns of `cat src/<m>.py && mypy src/<m>.py` across 14 modules
+repeat     the same command on ONE module, issued 13 times
+```
+
+`repeat` is the control for `work`: same shape, same volume, same relevance,
+roughly a fourteenth of the information.
+
+```
+arm         n   working hook   workaround   no hook   hit the cap
+control    55        2             3           6          44
+inert      53        3             1           7          42
+work       55       10             4          11          30
+repeat     55        2             2          10          41
+```
+
+**Ended with a working, blocking hook**
+
+```
+control    2/55 =  4%          work vs control     Fisher p = 0.0287
+inert      3/53 =  6%          repeat vs control   Fisher p = 1.0000
+work      10/55 = 18%          work vs repeat      Fisher p = 0.0287
+repeat     2/55 =  4%
+```
+
+**Ended on its own rather than exhausting the budget**
+
+```
+control   11/55 = 20%          work vs control     Fisher p = 0.0078
+inert     11/53 = 21%          repeat vs control   Fisher p = 0.6497
+work      25/55 = 45%          work vs repeat      Fisher p = 0.0456
+repeat    14/55 = 25%
+```
+
+Three contrasts, three answers:
+
+* **+15k tokens of irrelevant content** — indistinguishable from control on every
+  measure. Not a length effect.
+* **+15k tokens of task-relevant content carrying little information** —
+  indistinguishable from control (p = 1.00, p = 0.65). Not a volume-of-relevant-work
+  effect either.
+* **The same volume carrying fourteen modules' contents and their error lists** —
+  moves both measures, and is separated from its own matched control at
+  p = 0.0287 and p = 0.0456.
+
+**What the work filler actually is.** `cat src/<m>.py && mypy src/<m>.py` per
+module hands the model the file contents and a per-module error breakdown. It was
+chosen to be relevant but unhelpful — the errors are restated and never reduced —
+and the `repeat` arm now shows that is not how the model treats it. The effect
+should be described as **information that advances the task**, not as load.
+
+**Limits.** Eleven states, 55 continuations per arm, an outcome that is rare
+(2–10 events per cell), and one model on one environment. The `repeat` filler runs
+12,159 tokens against `work`'s 14,169 — 14% smaller, in the direction that would
+*understate* work's advantage if volume mattered, which is the direction that makes
+the comparison conservative. The workaround-rate outcome remains flat across all
+four arms and is not what moved.
