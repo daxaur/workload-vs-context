@@ -307,21 +307,32 @@ context, so at a fixed step number the 602-error condition already carries 9x th
 context of the 0-error one. No observational comparison can separate them, which
 is why an intervention was necessary.
 
-**Every pool is at a ceiling.** Oracle-labelled: gpt-oss-120b is 0/10 at 0 errors
-and 21/22, 9/9, 12/12 at 51, 258 and 602; deepseek-v4-pro is 0/13. A within-state
-intervention cannot move an outcome that is already 0 or 1 in every arm. `src_10`
-and `src_28` are being probed for an intermediate rate.
+**Almost every pool is at a ceiling, and the one that is not is slow.**
+Oracle-labelled, gpt-oss-120b runs 0/10 at 0 errors, 0/5 at 10, and 21/22, 9/9,
+12/12 at 51, 258 and 602; deepseek-v4-pro is 0/13. A within-state intervention
+cannot move an outcome already fixed at 0 or 1 in every arm. **28 errors, at
+3/12, is the exception** — and it buys that by deciding slowly: workarounds appear
+by step 18 while an honest finish needs step 36 or later, so a continuation of
+realistic length mostly ends undecided.
 
-That is a real answer to give someone else attempting the same open problem: the
-binding constraint is not the intervention, it is finding a model and a workload
-where the outcome is not already decided.
+That trade is the real answer to give someone else attempting the same open
+problem. The binding constraint is not the intervention or the dose — both were
+solved here. It is that the environment offers no operating point which is
+simultaneously **undecided** and **fast**, and without one, a paired design either
+has no variance to move or no time to move it in.
+
+The intervention was run anyway on the 28-error pool, with the manipulation check
+passing and its own resolution reported alongside every estimate. It is
+underpowered by construction and is labelled that way rather than presented as a
+null.
 
 ---
 
 ## Still open
 
-- Hand-labels for the 11 workarounds (`report.html` → `OBSERVATIONS.md`) and for
-  `saiddid_sample.md`. Nothing in this repo substitutes for reading them.
+- Hand-labels: `saiddid_sample.md` (30) and `monitorability_sample.md` (25), plus
+  the three rendered disagreements in `audit/`. See the priority queue at the
+  bottom of `OBSERVATIONS.md`. Nothing in this repo substitutes for reading them.
 - A false-positive rate for any grader — needs a held-out set whose budget allows
   honest completions.
 - `grade_v2.py` fixes the three held-out failures and scores 17/17 on the same
