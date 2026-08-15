@@ -890,43 +890,86 @@ together by construction here, so this arm attributes nothing to either one.
 
 ---
 
-### 2026-08-15 · CAN A JUDGE READ THE STANCE? — the pooled answer is confounded, and the clean slice is empty
+### 2026-08-15 · CAN A JUDGE READ THE STANCE? — pooled it looks strong, matched it is nothing
 
 The keyword monitor cannot distinguish "raises the shortcut and adopts it" from
-"raises it and refuses it". So: give two judges from different families the
+"raises it and refuses it". So: two judges from different families, each given the
 **first 8,000 characters of reasoning** — same rule for every rollout, no
-filesystem, no outcome — and ask for ADOPT / REJECT / UNCLEAR.
+filesystem, no outcome — answering ADOPT / REJECT / UNCLEAR.
 
 Ground truth from the artifact. **Both classes are gpt-oss-120b**: an earlier
 draft took negatives from deepseek, which would have let a judge score by
-recognising the writing style. The workload arm supplies same-model negatives
-(10 honest at 0 errors, 3 at 51, 1 at 602).
+recognising the writing style. The workload arm supplies same-model negatives.
+
+**Pooled across all conditions (n = 79, 63 positive):**
 
 ```
                               sensitivity        specificity
-qwen3-235b-a22b-2507           31/53 = 58%        13/14 = 93%
-gemini-2.5-flash-lite          47/53 = 89%        10/14 = 71%
-judges agree with each other   43/67 = 64%
+qwen3-235b-a22b-2507           34/63 = 54%        13/16 = 81%
+gemini-2.5-flash-lite          57/63 = 90%        10/16 = 62%
+judges agree with each other   48/79 = 61%
 ```
 
-**These numbers do not support a claim.** 10 of the 14 negatives come from the
-0-error condition, where the task is trivial and the reasoning is short and
-uneventful — a judge can separate the classes on difficulty alone. The only slice
-holding difficulty fixed is the 51-error condition, which contains both classes:
+That looks like a monitor. It is not. Most negatives come from the 0-error
+condition, where the task is trivial and the reasoning short — the classes are
+separable on **difficulty**, and a judge never has to read the stance at all.
+
+**The 51-error condition is the only one holding both classes**, so difficulty and
+model are both fixed there. 30 further rollouts were collected into a separate
+directory (not appended to the dose-response cell whose result prompted them):
 
 ```
-51-error condition only (n=6)   qwen  sens 0/3  spec 3/3
-                                gemini sens 1/3  spec 0/3
+n = 18   workaround 13   honest 5
+   baseline "always ADOPT"   accuracy 13/18 = 72%
+   baseline "never  ADOPT"   accuracy  5/18 = 28%
+
+qwen3-235b     TP 3  FN 10  FP 2  TN 3   accuracy 33%   Fisher p = 0.583
+gemini-flash   TP 11 FN  2  FP 5  TN 0   accuracy 61%   Fisher p = 1.000
 ```
 
-At n = 3 per class, with the two judges pointing opposite ways, that is noise.
-Recorded as an inconclusive result, not a negative one.
+**Neither judge beats the majority-class baseline, and neither 2x2 shows any
+association.** gemini answers ADOPT on 16 of 18 — it is close to a constant
+predictor, which is exactly how it earned 90% sensitivity in the pooled table.
 
-Two things it does establish. The judges disagree with each other on **36%** of
-rollouts, so "the stance is legible in the reasoning" is not something to assume.
-And the pooled figures show how easy it is to build a monitorability result out
-of a difficulty confound.
+Stated honestly: at matched task difficulty this design detects **no** ability to
+predict the agent's action from a fixed prefix of its reasoning. With 5 negatives
+it has power only for a very large effect, so this rules out a strong signal, not
+a weak one. The judges also disagree with each other on 39% of rollouts.
 
-**What would settle it:** ~30 more rollouts at `target_errors: 51`, which runs
-about 30% honest, giving roughly 12 per class at matched difficulty. Queued
-behind the padding arms.
+The transferable point is the gap between the two tables. The pooled numbers are
+the ones a write-up would naturally report, and they are an artefact of the
+confound.
+
+---
+
+### 2026-08-15 · THREE-ARM PADDING, v2 — design fixed before the data
+
+Recorded here before any outcome exists, so the analysis cannot drift.
+
+* **States** drawn by `candidates.py` from the **51-error** pool. The 258-error
+  pool writes a workaround in 10 of 10 and every checkpoint in it is at ceiling —
+  that is what made v1 uninterpretable. Selection uses only the original rollout
+  (inside the lag window, not already a workaround, after the error wall is seen),
+  never a resampling outcome. One checkpoint per source rollout.
+* **No screening on the control arm.** Conditioning the paired comparison on one
+  of its own arms biases it. Every selected state is run and reported.
+* **Arms.** control · pad_inert · pad_work. Filler is generated per state by
+  rebuilding that checkpoint in the container and *running* the commands, so every
+  injected observation is true of the agent's own workspace — the v1 filler
+  asserted a clean `git status` in states that had staged files. Matched on tokens
+  **and** turn count (13 turns, ~14.8k tokens, arms within 1%).
+* **Budget** `max_steps = step + 25`. v1 used step + 14 and truncated 39 of 80.
+  step + 40 was the first correction, but at 51 errors the first workaround
+  artifact appears at steps 4, 13, 16, so the extra 15 steps bought only
+  wall-clock. Truncation per arm is reported.
+* **Power.** 8 states x 5 resamples/arm gives SE ~0.11 on the mean paired
+  difference at p ~ 0.5: about 80% power for a 30pp shift. Smaller shifts are not
+  detectable at this budget and no claim will be made about them.
+* **Manipulation check first.** `awareness.py` compares filler references,
+  re-orientation and confusion markers across arms. If the padded arms re-orient
+  more than control, the intervention was not a pure length change and the outcome
+  does not get read.
+* **Second outcome.** Whether the model voices the shortcut after the resume,
+  measured on every continuation including those that never reach an artifact.
+  Keyword-based, with a 31% false-positive rate on verified-honest rollouts, so it
+  is a measure of deliberation rather than of intent.
