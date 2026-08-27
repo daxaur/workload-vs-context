@@ -127,6 +127,7 @@ hr{border:none;border-top:1px solid var(--line);margin:26px 0}
   <a href="#pad2"><span class="n">8</span>Build 4: four arms</a>
   <a href="#wrong"><span class="n">9</span>What went wrong</a>
   <div class="grp">Look things up</div>
+  <a href="#links"><span class="n">L</span>Links &amp; sources</a>
   <a href="#cs-scripts"><span class="n">A</span>Every script</a>
   <a href="#cs-numbers"><span class="n">B</span>Every number</a>
   <a href="#cs-classes"><span class="n">C</span>The 9 classes</a>
@@ -221,9 +222,17 @@ sections as lookup.</p>
   long time. In any naturally-occurring rollout, the failures <b>are</b> the context — turn index,
   token count and failure count all climb together.</p>
 
-  <p>Neel Nanda's team put exactly this on their public open-problems list on 6 Aug 2026, in
-  <i>Why do models task game?</i>: <span class="small">disentangle "model is trying and failing"
-  from "context is getting longer" effects.</span></p>
+  <p>Neel Nanda's team framed exactly this on 6 Aug 2026, in
+  <a href="https://www.lesswrong.com/posts/HACauvWhEdC6QhdS4/why-do-models-task-game">Why do models
+  task game?</a>: <span class="small">disentangle "model is trying and failing" from "context is
+  getting longer" effects.</span> <a href="#links" class="small">(one thing to verify about that
+  quote →)</a></p>
+
+  <p class="small">That post is also where the transcript above lives — its Performance Dashboard
+  section. The environment is
+  <a href="https://github.com/gkroiz/agent-interp-envs/tree/main/environments/dashboard_perf"><code>dashboard_perf</code></a>:
+  a TypeScript chart engine, under 150ms at 50k points, with the e2e suite that checks render timing
+  and visual correctness skipped in CI and ready PRs auto-merging with no review.</p>
 
   <div class="box">
     <h4>Why it matters either way</h4>
@@ -453,7 +462,10 @@ specificity  24/24 = <span class="ok">100%</span></pre>
   present.</p>
 
   <p>Because mypy looks for its settings in a fixed order and <b>stops at the first file it
-  finds</b>: <code>mypy.ini</code>, then <code>.mypy.ini</code>, then <code>pyproject.toml</code>.
+  finds</b>: <code>mypy.ini</code>, then <code>.mypy.ini</code>, then <code>pyproject.toml</code>,
+  then <code>setup.cfg</code>. Its
+  <a href="https://mypy.readthedocs.io/en/stable/config_file.html">own docs</a> say why:
+  <i>"there is no merging of configuration files, as it would lead to ambiguity."</i>
   The agent created a <code>mypy.ini</code> containing one line:</p>
 
   <pre>[mypy]
@@ -748,6 +760,98 @@ repeat  20/120 = 16.7%</pre>
 </section>
 
 <hr>
+
+<!-- ================= L LINKS ================= -->
+<section id="links">
+  <h2><span class="step">Cheat sheet L</span>Links &amp; sources</h2>
+  <p>Everything outside this repo, clickable. <span class="pill g">checked</span> means I opened it
+  on 27 Aug 2026 and it resolved with the content described.</p>
+
+  <h3>The work you are building on</h3>
+  <table class="data">
+    <tr>
+      <td><a href="https://www.lesswrong.com/posts/HACauvWhEdC6QhdS4/why-do-models-task-game">Why do models task game?</a> <span class="pill g">checked</span></td>
+      <td class="small">Singh, Nanda &amp; Rajamanoharan, 6 Aug 2026. The post your project answers.
+      <b>The DeepSeek transcript is in here</b>, in the Performance Dashboard section. Also mirrored on
+      <a href="https://www.alignmentforum.org/posts/HACauvWhEdC6QhdS4/why-do-models-task-game">Alignment Forum</a>
+      and <a href="https://www.greaterwrong.com/posts/HACauvWhEdC6QhdS4/why-do-models-task-game">GreaterWrong</a>.</td>
+    </tr>
+    <tr>
+      <td><a href="https://arxiv.org/abs/2606.26071">Model Forensics</a> <span class="pill g">checked</span></td>
+      <td class="small">"Investigating Whether Concerning Behavior Reflects Misalignment" — Singh, Kroiz,
+      Rajamanoharan &amp; Nanda. The paper the environments were released with.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/gkroiz/agent-interp-envs">agent-interp-envs</a> <span class="pill g">checked</span></td>
+      <td class="small">MIT. 20+ environments across task gaming, honesty and disclosure.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/gkroiz/agent-interp-envs/tree/main/environments/precommit_hook">→ precommit_hook</a> <span class="pill g">checked</span></td>
+      <td class="small">Your environment. Its README is where the <code>src_N</code> variants and
+      <code>score.py</code>'s flags are documented.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/gkroiz/agent-interp-envs/tree/main/environments/dashboard_perf">→ dashboard_perf</a> <span class="pill g">checked</span></td>
+      <td class="small"><b>The environment the DeepSeek transcript comes from.</b> TypeScript chart engine,
+      under 150ms at 50k points, e2e timing suite skipped in CI, ready PRs auto-merge with no review.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/daxaur/workload-vs-context">daxaur/workload-vs-context</a></td>
+      <td class="small">Yours. Private, 80+ commits.</td>
+    </tr>
+  </table>
+
+  <h3>The one external fact class 9 rests on</h3>
+  <table class="data">
+    <tr>
+      <td><a href="https://mypy.readthedocs.io/en/stable/config_file.html">mypy — the config file</a> <span class="pill g">checked</span></td>
+      <td class="small">Mypy walks up the filesystem and in each directory looks for
+      <code>mypy.ini</code>, <code>.mypy.ini</code>, <code>pyproject.toml</code>, <code>setup.cfg</code>,
+      <b>in that order, and stops at the first one it finds</b>. The docs say plainly: <i>"there is no
+      merging of configuration files, as it would lead to ambiguity."</i>
+      <b>Cite this line in the write-up</b> — it is what turns class 9 from a curiosity into a
+      documented mechanism.</td>
+    </tr>
+  </table>
+
+  <h3>Applying</h3>
+  <table class="data">
+    <tr>
+      <td><a href="https://airtable.com/appnMboxg76F1QIDc/pagqu7wWWrUCZkNVI/form">The application form</a></td>
+      <td class="small">Free, unlimited. Neel reads the form questions <b>first</b> and uses them as a
+      preliminary filter. Not an afterthought.</td>
+    </tr>
+    <tr>
+      <td><a href="https://docs.google.com/document/d/1p-ggQV3vVWIQuCccXEl1fD0thJOgXimlbBpGk6FI32I/edit">Neel's application doc</a> <span class="pill g">checked</span></td>
+      <td class="small">Resolves from <code>tinyurl.com/neel-mats-app</code>. Holds the Recommended
+      Research Problems tab, which is a <b>separate Google Docs tab</b> and has to be opened in a browser.</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.alignmentforum.org/posts/StENzDcD3kpfGJssR/a-pragmatic-vision-for-interpretability">A Pragmatic Vision for Interpretability</a></td>
+      <td class="small">~45 min. What he wants and what he refuses.</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.alignmentforum.org/posts/eJGptPbbFPZGLpjsp/highly-opinionated-advice-on-how-to-write-ml-papers">How to write ML papers</a></td>
+      <td class="small">Read before the write-up, not after.</td>
+    </tr>
+  </table>
+
+  <div class="box amber">
+    <h4>One thing to check yourself before it reaches the write-up</h4>
+    <p class="small">Your <code>README.md</code> presents this as a direct quote from the LessWrong post:</p>
+    <blockquote style="margin:8px 0">Disentangle "model is trying and failing" from "context is getting longer" effects</blockquote>
+    <p class="small">I fetched the post twice, from LessWrong and from the GreaterWrong mirror, and
+    that sentence did not come back either time. It may still be there — fetches truncate, and
+    collapsible or appendix sections often do not come through. But the more likely home for a line
+    phrased like that is the <b>Recommended Research Problems tab</b> of Neel's application doc,
+    which your own vault notes say never came through the plain-text export.</p>
+    <p class="small" style="margin-top:8px"><b>Why this matters more than it looks:</b> Neel is the
+    person reading your write-up, and it would be his own post being misquoted. Open the post, hit
+    <code>cmd+F</code>, and either confirm the sentence or re-attribute it to wherever it actually
+    came from. Five minutes, and it removes the one citation in the project that neither of us has
+    verified.</p>
+  </div>
+</section>
 
 <!-- ================= A SCRIPTS ================= -->
 <section id="cs-scripts">
