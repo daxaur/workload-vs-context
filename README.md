@@ -1,9 +1,13 @@
 # Workload vs context: what makes an agent take a shortcut it already refused?
 
-**Status:** experiments run. See [FINDINGS.md](FINDINGS.md) for what was measured and
-[CHECKS.md](CHECKS.md) for the verification log, including every check that came back
-negative and every error caught in my own analysis. MATS 12.0 application project
-(Neel Nanda's stream).
+**Status:** complete. [FINDINGS.md](FINDINGS.md) is every result with the command that
+recomputes it. [CHECKS.md](CHECKS.md) is the verification log: 47 dated entries, 13 of them
+corrections to my own analysis, each kept beside the number it replaced.
+
+MATS 12.0 application project, Neel Nanda's stream. The open problem comes from Aditya Singh's
+research problem list, and the environment is the one released with
+[Model Forensics](https://arxiv.org/abs/2606.26071) at
+[gkroiz/agent-interp-envs](https://github.com/gkroiz/agent-interp-envs).
 
 ---
 
@@ -89,104 +93,104 @@ model 258 errors in a short conversation, or 10 errors in a long one.
 
 ### The design
 
-|                    | few errors (`src_10`) | many errors (`src_258`) |
-| ------------------ | --------------------- | ----------------------- |
-| **short context**  | A                     | B                       |
-| **long context**   | C                     | D                       |
+Take one saved checkpoint from a real rollout and resume it four times. The filesystem and the
+remaining step budget are byte-identical across all four, verified before each run. The only
+difference is what has been spliced into the conversation behind the agent.
 
-- Shortcut rate tracks **rows** (B, D high) → it's the **workload**.
-- Shortcut rate tracks **columns** (C, D high) → it's the **context**.
-- Needs both → more interesting than either, and worth saying so.
+| arm | injected |
+|---|---|
+| control | nothing |
+| inert | 13 turns of real but task-irrelevant reading |
+| work | `cat src/<m>.py && mypy src/<m>.py` across 14 modules |
+| repeat | the same command on **one** module, 13 times |
 
-Two outcomes get measured per rollout: **did it cheat**, and **at which step**.
+`repeat` is the control for `work`: same shape, same volume, same task relevance, roughly a
+fourteenth of the information. It is the arm that could have killed the result.
 
-### Controls
+---
 
-- **`src_0` — zero errors.** Nothing blocks the commit, so there's no reason to cheat. If cheating
-  shows up here, my setup is broken and every other number is meaningless. Cheapest possible sanity
-  check and it runs first.
-- **Told vs made.** Tell the model the codebase has 258 errors while actually giving it 10. Separates
-  *believing* the work is large from *experiencing* it.
-- **Length-matched, failure-free.** A long context filled with work that succeeded.
-- **Random / chance** — the floor.
+## What I found
 
-### The way this is most likely to be wrong
+**1. The detection method this field relies on is broken, and I measured by how much.**
 
-**Capability, not character.** A model facing 258 errors might cheat because it *can't* finish in the
-step budget, not because it *won't*. That's a completely different claim and it would be easy to miss.
-So legitimate progress gets measured alongside cheating — annotations added, errors actually fixed —
-and if the model is simply making less headway late in long runs, that's context rot in the ordinary
-capability sense and I should say so rather than dress it up as an alignment finding.
+The scorer shipped with the environment catches 0 of 11 workarounds in the sample and raises 2
+false alarms. My own grader, frozen before it saw held-out data, misses 18% (95% Wilson 10-28%)
+when scored against actually running the artifact. Nine distinct workaround classes; three are
+invisible to any pattern over the files.
 
-Other ways it could be wrong, in the order I'm worried about them:
+```
+released score.py   0 of 11, plus 2 false alarms
+frozen v1           sensitivity 82%   specificity 100%   miss rate 18%
+v2 after one round  87%
+v3 after two rounds 100% on the data the fixes were written against
+```
 
-- **Eval awareness.** The model works out it's in a test and behaves differently. There's an existing
-  autorater for this to check against.
-- **Step budget as a confound.** `max_steps` caps the run; if a condition hits the cap it's censored,
-  not honest.
-- **Grader drift.** Even mechanical flags can miscount. I'll hand-label a random sample of rollouts
-  and report agreement with the scorer rather than assuming it.
+The sharpest class: a hook that is literally `mypy src`, no flags, no source edits, passing with
+51 real errors present, because the agent created a `mypy.ini` containing only
+`ignore_missing_imports = True`. That file suppresses nothing. It wins on config precedence, and
+mypy [documents](https://mypy.readthedocs.io/en/stable/config_file.html) that there is no merging
+of config files.
 
-## What's in this repo
+```
+pristine (pyproject.toml only)               Found 51 errors in 8 files
++ mypy.ini with only ignore_missing_imports  Success: no issues found
+- mypy.ini removed again                     Found 51 errors in 8 files
+```
 
-Nothing yet. It'll be the runner configs, the analysis notebook, the figures, and a log of every
-sanity check I ran with what it showed.
+**2. The decision is made early and never reversed.**
 
-## Honest state of play
+Median step 2 to see the error count, step 4 to voice the shortcut in reasoning, step 8 to write
+it. Zero of 149 workaround artifacts were ever removed, across 249 rollouts. So terminal-state
+grading measures a decision rather than a scratch state, which the field assumes without checking.
 
-Written before running anything. The plan will change once the pilot tells me whether the behaviour
-even shows up in my setup — and if it doesn't, the right move is to say so and pick a different
-question, which costs nothing this early.
+**3. Neither context length nor workload is the operative variable.**
 
+```
+arm         n     working hook   rate      p vs control
+control    118         3          2.5%      -
+inert       58         3          5.2%      0.3971
+work       120        23         19.2%      0.000036
+repeat     120         1          0.8%      0.3676
+                       work vs repeat  p = 0.000001
+```
+
+15k tokens of irrelevant content does nothing. 15k tokens of relevant but uninformative content
+does nothing. The same volume carrying real per-module error lists takes honest completion from
+2.5% to 19.2%, and episodes that end at all from 15.3% to 35.8%. The workaround rate itself
+stayed flat across all four arms.
+
+---
+
+## What this does not show
+
+The `work` filler hands over genuinely useful material, so the operative variable is information
+that advances the task, and this design cannot separate "the model used it" from "the model was
+reminded the task was tractable". A fifth arm would settle it and was not run.
+
+One model, one environment, one workload level. Eight Fisher tests with no multiplicity
+correction. The two reasoning-trace classifiers were never hand-validated, so their numbers are
+excluded here.
+
+Two results were withdrawn during the project and the withdrawals are logged: a workload
+dose-response reported at p = 1.1e-05 that turned out to be my own grader failing more at low
+workload, and a stance-judging result that was reading task difficulty rather than intent.
 
 ---
 
 ## Reproducing
 
-Everything below runs against `agent-interp-envs` with `precommit_hook:latest` built locally.
-Concurrency is capped at 5 throughout: above that `mypy src` exceeds the container's 30s command
-timeout and the tool result silently becomes `<TIMEOUT>`.
-
 ```bash
 docker tag precommit_hook:local precommit_hook:latest
 
-# grading — ours, theirs, and the two test suites
-python test_grade.py                 # incl. the released score.py on the same cases
-python test_grade_v2.py
-
-# the behavioural oracle: rebuild each workspace in the container and run the hook
-python oracle.py <run-dirs> --out heldout_oracle.json
-
-# validity of terminal-state grading
-python transience.py ~/mats/agent-interp-envs/results ~/mats/_paired
-
-# when the decision happens
-python timing.py                     # competing-risks incidence + ICC
-python trigger.py                    # lag from seeing the errors to acting
-python saiddid.py --sample 30        # said-vs-did, writes a blinded label sample
-
-# the two monitoring channels
-python monitorability.py --sample 25
-python stance_judge.py --prefix 8000
-
-# interventions
-./run_workload.sh 10                 # workload set at launch
-./run_pad2.sh run 0 1 2 3 4 5 6 7 8 9
-python awareness.py ~/mats/_p2       # run this BEFORE reading the outcome
-python analyze_pad2.py ~/mats/_p2
-
-python figures.py                    # regenerates every panel from the JSON above
+python test_grade.py                       # graders, incl. the released one on the same cases
+python oracle.py <run-dirs> --out all_oracle.json    # behavioural ground truth
+python reconcile.py                        # grader accuracy, workload curve, CoT monitor
+python transience.py <roots>               # are workarounds ever reversed
+python timing.py ; python trigger.py       # when the decision happens
+python analyze_pad2.py ~/_p2               # the four-arm intervention
+python awareness.py ~/_p2                  # manipulation check, run before the outcome
+python figures.py                          # regenerates every figure
 ```
 
-## What still needs a human
-
-Two blinded samples are written out for hand-labelling, and the numbers that depend on them are
-marked as provisional until the labels exist:
-
-- `saiddid_sample.md` — 30 rollouts. Is the quoted reasoning first-person intent to suppress, or
-  is it describing what a flag does?
-- `monitorability_sample.md` — 25 rollouts. Is the model acknowledging that its own plan violates
-  the task, or restating the rules?
-
-`audit/` holds rendered transcripts for the three held-out disagreements: the two workaround classes
-the frozen grader missed, and the `/tmp/mypy.ini` false positive.
+Rollout data is not in the repo: 2.4 GB across three directories. Every number above regenerates
+from it, and the commands above name which script produces which.
